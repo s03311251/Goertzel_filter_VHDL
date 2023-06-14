@@ -5,6 +5,12 @@ Fs = 1e6; % sampling frequency
 F_detect = 50e3; % frequency to detect
 N = 100; % number of samples
 INPUT_BIT_LEN = 14; % number of input bit length
+INPUT_SWING = 14; % swing of input signal
+
+% VHDL impelmentation related
+INT_BW = 18; % bit width for internal data
+LSB_TRUNCATE = 5; % internal data's LSB truncated, as implemented in VHDL
+
 
 % 2. Generate the waveforms
 t = (0:N-1) / Fs;
@@ -14,16 +20,16 @@ phase_angles = [0];
 % Sine Waves
 % frequencies_sine = [50e3, 49e3, 51e3, 5e3, 200e3];
 frequencies_sine = [50e3];
-sine_waves = zeros(length(frequencies_sine), length(phase_angles), N);
+sine_waves = zeros(length(frequencies_sine), length(phase_angles), N, "int32");
 
 for i = 1:length(frequencies_sine)
     for j = 1:length(phase_angles)
         frequency = frequencies_sine(i);
         phase = phase_angles(j);
         sine_wave = sin(2*pi*frequency*t + deg2rad(phase));
-        sine_waves(i, j, :) = scaleToUint(sine_wave, INPUT_BIT_LEN);
+        sine_waves(i, j, :) = scaleToInt(sine_wave, INPUT_BIT_LEN, INPUT_SWING);
 
-        % % Sanity Check for scaleToUint()
+        % % Sanity Check for scaleToInt()
         % disp(['Frequency: ', num2str(frequency), ', phase: ', num2str(phase)]);
         % min_value = min(sine_wave);
         % index = find(sine_wave == min_value);
@@ -45,7 +51,7 @@ for i = 1:length(frequencies_rectangular)
         frequency = frequencies_rectangular(i);
         phase = phase_angles(j);
         rectangular_wave = square(2*pi*frequency*t + deg2rad(phase));
-        rectangular_waves(i, j, :) = scaleToUint(rectangular_wave, INPUT_BIT_LEN);
+        rectangular_waves(i, j, :) = scaleToInt(rectangular_wave, INPUT_BIT_LEN, INPUT_SWING);
     end
 end
 
@@ -56,7 +62,7 @@ triangle_waves = zeros(length(phase_angles_triangle), N);
 for i = 1:length(phase_angles_triangle)
     phase = phase_angles_triangle(i);
     triangle_wave = sawtooth(2*pi*50e3*t + deg2rad(phase), 0.5);
-    triangle_waves(i, :) = scaleToUint(triangle_wave, INPUT_BIT_LEN);
+    triangle_waves(i, :) = scaleToInt(triangle_wave, INPUT_BIT_LEN, INPUT_SWING);
 end
 
 % % 3. Sanity Check: plot the waveforms
@@ -99,68 +105,77 @@ end
 
 % 4. Goertzel Filter
 
-
 for i = 1:length(frequencies_sine)
     for j = 1:length(phase_angles)
         freq_indices = round(F_detect/Fs*N) + 1;
-        % transform to single precision because goertzel only accepts single
-        dft_data = goertzel(single(sine_waves(i, j, :)),freq_indices);
-        fprintf("%d", dft_data);
+        % % transform to single precision because goertzel only accepts single
+        % dft_data = goertzel(single(sine_waves(i, j, :)),freq_indices);
+        dft_input = reshape(sine_waves(i, j, :), 1, []);
+        % dft_data = goertzel_filter(dft_input, F_detect, Fs);
+        [s, s_prev] = goertzel_filter(dft_input, F_detect, Fs, INT_BW, LSB_TRUNCATE);
+        % fprintf("freq: %d phase: %d magnitude: %d\n", i, j, abs(dft_data));
+        fprintf("freq: %d phase: %d s: %d %d\n", i, j, s, s_prev);
     end
 end
 
-figure; % open a new figure window
-stem(F_detect,abs(dft_data))
+% figure; % open a new figure window
+% stem(F_detect,abs(dft_data))
 
-% Adjusting subplot spacing
-sgtitle('Waveform Plots');
+% % Adjusting subplot spacing
+% sgtitle('Waveform Plots');
 
-ax = gca;
-ax.XTick = F_detect;
-xlabel('Frequency (Hz)')
-ylabel('DFT Magnitude')
+% ax = gca;
+% ax.XTick = F_detect;
+% xlabel('Frequency (Hz)')
+% ylabel('DFT Magnitude')
 
 % 5. Sanity Check: plot the result of Goertzel Filter
 
-% 6. Output the waveforms to a file
-% each entity occupies a row in the file
+% % 6. Output the waveforms to a file
+% % each entity occupies a row in the file
 
-% File path and name prefix
-filePrefix = 'sine_wave';
+% % File path and name prefix
+% filePrefix = 'sine_wave';
 
-% Fixed width and padding with zeros
-% maximum is 16383 -> 0x3FFF, hence lineWidth = 4
-lineWidth = ceil(INPUT_BIT_LEN / 4);
+% % Fixed width and padding with zeros
+% % maximum is 16383 -> 0x3FFF, hence lineWidth = 4
+% lineWidth = ceil(INPUT_BIT_LEN / 4);
 
-% Loop through sine_waves and write each waveform to a separate file
-for i = 1:length(frequencies_sine)
-    for j = 1:length(phase_angles)
-        % Generate the file name
-        nameFreq = sprintf('%.0f%sHz', frequencies_sine(i) / 10^(3 * floor(log10(abs(frequencies_sine(i)))/3)), suffix(frequencies_sine(i)));
-        fileName = sprintf('%s_%s_%ddeg.txt', filePrefix, nameFreq, phase_angles(j));
+% % Loop through sine_waves and write each waveform to a separate file
+% for i = 1:length(frequencies_sine)
+%     for j = 1:length(phase_angles)
+%         % Generate the file name
+%         nameFreq = sprintf('%.0f%sHz', frequencies_sine(i) / 10^(3 * floor(log10(abs(frequencies_sine(i)))/3)), suffix(frequencies_sine(i)));
+%         fileName = sprintf('test_cases/input/%s_%s_%ddeg.txt', filePrefix, nameFreq, phase_angles(j));
         
-        % Open the file for writing
-        fileID = fopen(fileName, 'w');
+%         % Open the file for writing
+%         fileID = fopen(fileName, 'w');
         
-        % Write each entity of the sine_wave to a line in the file
-        for j = 1:size(sine_waves, 3)
-            fprintf(fileID, '%0*X\n', lineWidth, sine_waves(i, j));
-        end
+%         % Write each entity of the sine_wave to a line in the file
+%         for j = 1:size(sine_waves, 3)
+%             fprintf(fileID, '%0*X\n', lineWidth, sine_waves(i, j));
+%         end
         
-        % Close the file
-        fclose(fileID);
-    end
-end
+%         % Close the file
+%         fclose(fileID);
+%     end
+% end
 
 % TODO: filter output
 
 % 99. Function definitions in a script must appear at the end of the file
 % for waveform generation
-function output = scaleToUint(input, bit_len)
-    % Scale the waveforms to the range of 0 to 2^bit_len-1
-    scaled = (input + 1) * (2^bit_len - 1) / 2;
+% function output = scaleToInt(input, bit_len, input_swing)
+%     % Scale the waveforms to the range of 0 to 2^bit_len-1
+%     scaled = (input + 1) * (2^bit_len - 1) / 2;
+%     % Convert the scaled waveforms to (bit_len)-bit unsigned integers
+%     output = int32(scaled);
+% end
+function output = scaleToInt(input, bit_len, input_swing)
+    % Scale the waveforms to the range of 2^(bit_len - 1) +/- 2^input_swing
+    scaled = (2 ^ bit_len - 1) / 2 + input * (2 ^ input_swing - 1) / 2;
     % Convert the scaled waveforms to (bit_len)-bit unsigned integers
-    output = uint16(scaled);
+    output = int32(round(scaled));
 end
 
 % Function to generate SI unit suffix
@@ -170,4 +185,84 @@ function s = suffix(num)
     exponent = floor(exponent / 3);
     exponent = max(min(exponent, numel(units)-1), 0);
     s = units{exponent+1};
+end
+
+% Luca's Filter
+% function magnitude = goertzel_filter(signal, targetFrequency, samplingRate)
+function [sN, sNprev] = goertzel_filter(signal, targetFrequency, samplingRate, intBw, lsbTruncate)
+    N = length(signal); % Length of the signal
+    k = round(N * targetFrequency / samplingRate); % Bin frequency
+    w = 2 * pi * k / N; % Angular frequency
+    cosine = cos(w);
+    coefficient = 2 * cosine;
+    % fprintf("COEFF %.20f\n", coefficient);
+    % round acconding to intBw
+    coefficient = round(coefficient * 2 ^ intBw) / (2 ^ intBw);
+    % fprintf("COEFF %.20f\n", coefficient);
+
+    s = zeros(N, 1); % First intermediate variable
+    sprev = 0; % Previous s[n-1]
+    sprev2 = 0; % Previous s[n-2]
+
+    % Iterate through the signal
+    min = 0.0;
+    max = 0.0;
+    for n = 1:N
+        % s(n) = signal(n) + coefficient * sprev - sprev2;
+
+        % s_tmp = signal(n) + coefficient * sprev - sprev2;
+        % % truncate according to lsbTruncate
+        % s(n) = round(double(s_tmp) / 2 ^ lsbTruncate) * (2 ^ lsbTruncate);
+
+        % truncate according to lsbTruncate
+        signal_trunc = round(double(signal(n)) / 2 ^ lsbTruncate) * (2 ^ lsbTruncate);
+        multi_prod_trunc = round(coefficient * sprev / 2 ^ lsbTruncate) * (2 ^ lsbTruncate);
+        % sprev2_trunc = round(sprev2 / 2 ^ lsbTruncate) * (2 ^ lsbTruncate);
+        s(n) = signal_trunc + multi_prod_trunc - sprev2;
+
+        % % debug
+        fprintf("n: %d Prod_SO %f Sample_SI %f COEFF*Prod_q_D %f Prod_qq_D %f\n", n, s(n), signal_trunc, multi_prod_trunc, sprev2);
+        
+        sprev2 = sprev;
+        sprev = s(n);
+
+        % % debug
+        % fprintf("n: %d s(n): %f\n", n, s(n));
+        % if s(n) < min
+        %     min = s(n);
+        % elseif s(n) > max
+        %     max = s(n);
+        % end
+    end
+    % % debug
+    % fprintf("min: %f max: %f\n", min, max);
+
+    % Compute the magnitude
+    sN = s(N);
+    sNprev = s(N-1);
+    magnitude = sqrt(double(sN^2 + sNprev^2 - sN * sNprev * coefficient));
+
+    % % Compute the FFT
+    % f = (0:N-1) * (samplingRate / N);
+    % fftSignal = abs(fft(signal));
+
+    % % Plot the signal, intermediate values, and FFT
+    % figure;
+    % subplot(3, 1, 1);
+    % plot(signal);
+    % xlabel('Sample');
+    % ylabel('Amplitude');
+    % title('Input Signal');
+
+    % subplot(3, 1, 2);
+    % plot(s);
+    % xlabel('Sample');
+    % ylabel('s[n]');
+    % title('Goertzel Algorithm - Intermediate Values');
+
+    % subplot(3, 1, 3);
+    % plot(f, fftSignal);
+    % xlabel('Frequency (Hz)');
+    % ylabel('Magnitude');
+    % title('Frequency Spectrum (FFT)');
 end

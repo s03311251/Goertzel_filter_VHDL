@@ -41,32 +41,37 @@ ARCHITECTURE testbench_arch OF goertzel_tb IS
     SIGNAL sigterm : STD_LOGIC := '0';
 
     -- for DUT
-    CONSTANT N          : POSITIVE                    := 100;
-    CONSTANT SIG_BW     : POSITIVE                    := 14;
-    CONSTANT INT_BW     : POSITIVE                    := 64;
-    CONSTANT COEFF      : SFIXED(2 DOWNTO 3 - INT_BW) := to_sfixed(1.90211303259031, 1, 2 - INT_BW);
-    SIGNAL Sample_SI    : UNSIGNED(SIG_BW - 1 DOWNTO 0);
-    SIGNAL Magnitude_SO : SIGNED(17 DOWNTO 0);
-    SIGNAL En_SI        : STD_LOGIC;
-    SIGNAL Done_SO      : STD_LOGIC;
+    CONSTANT N            : POSITIVE                    := 100;
+    CONSTANT SIG_BW       : POSITIVE                    := 14;
+    CONSTANT INT_BW       : POSITIVE                    := 18;
+    CONSTANT LSB_TRUNCATE : POSITIVE                    := 5;
+    CONSTANT COEFF        : SFIXED(2 DOWNTO 3 - INT_BW) := to_sfixed(1.90211303259031, 2, 3 - INT_BW);
+    SIGNAL Sample_SI      : UNSIGNED(SIG_BW - 1 DOWNTO 0);
+    -- SIGNAL Magnitude_SO   : SIGNED(17 DOWNTO 0);
+    SIGNAL Prod_SO   : SIGNED(INT_BW + LSB_TRUNCATE - 1 DOWNTO 0);
+    SIGNAL Prod_q_SO : SIGNED(INT_BW + LSB_TRUNCATE - 1 DOWNTO 0);
+    SIGNAL En_SI     : STD_LOGIC;
+    SIGNAL Done_SO   : STD_LOGIC;
 
     -- File I/O
     FILE fptr : text;
 
     COMPONENT goertzel IS
         GENERIC (
-            N      : POSITIVE                    := 100; -- Number of samples
-            SIG_BW : POSITIVE                    := 14;  -- bit width for input signal
-            INT_BW : POSITIVE                    := 18;  -- bit width for internal data
-            COEFF  : SFIXED(2 DOWNTO 3 - INT_BW) := to_sfixed(1.90211303259031, 1, 2 - INT_BW)
+            N            : POSITIVE                    := 100; -- Number of samples
+            SIG_BW       : POSITIVE                    := 14;  -- bit width for input signal
+            INT_BW       : POSITIVE                    := 18;  -- bit width for internal data
+            LSB_TRUNCATE : POSITIVE                    := 5;   -- truncate internal data's LSB to avoid overflow
+            COEFF        : SFIXED(2 DOWNTO 3 - INT_BW) := to_sfixed(1.90211303259031, 2, 3 - INT_BW)
         );
         PORT (
-            Clk_CI       : IN STD_LOGIC;
-            Rst_RBI      : IN STD_LOGIC;
-            Sample_SI    : IN UNSIGNED(SIG_BW - 1 DOWNTO 0);
-            Magnitude_SO : OUT SIGNED(17 DOWNTO 0);
-            En_SI        : IN STD_LOGIC;
-            Done_SO      : OUT STD_LOGIC
+            Clk_CI    : IN STD_LOGIC;
+            Rst_RBI   : IN STD_LOGIC;
+            Sample_SI : IN UNSIGNED(SIG_BW - 1 DOWNTO 0);
+            Prod_SO   : OUT SIGNED(INT_BW + LSB_TRUNCATE - 1 DOWNTO 0);
+            Prod_q_SO : OUT SIGNED(INT_BW + LSB_TRUNCATE - 1 DOWNTO 0);
+            En_SI     : IN STD_LOGIC;
+            Done_SO   : OUT STD_LOGIC
         );
     END COMPONENT;
 
@@ -134,18 +139,20 @@ BEGIN
 
     DUT : goertzel
     GENERIC MAP(
-        N      => N,
-        SIG_BW => SIG_BW,
-        INT_BW => INT_BW,
-        COEFF  => COEFF
+        N            => N,
+        SIG_BW       => SIG_BW,
+        INT_BW       => INT_BW,
+        LSB_TRUNCATE => LSB_TRUNCATE,
+        COEFF        => COEFF
     )
     PORT MAP(
 
-        Clk_CI       => clk,
-        Rst_RBI      => rst,
-        Sample_SI    => Sample_SI,
-        Magnitude_SO => Magnitude_SO,
-        En_SI        => En_SI,
-        Done_SO      => Done_SO
+        Clk_CI    => clk,
+        Rst_RBI   => rst,
+        Sample_SI => Sample_SI,
+        Prod_SO   => Prod_SO,
+        Prod_q_SO => Prod_q_SO,
+        En_SI     => En_SI,
+        Done_SO   => Done_SO
     );
 END testbench_arch;
