@@ -8,10 +8,12 @@ INPUT_BIT_LEN = 14; % number of input bit length
 
 % 2. Generate the waveforms
 t = (0:N-1) / Fs;
-phase_angles = [0, 30, 45, 90, 120];
+% phase_angles = [0, 30, 45, 90, 120];
+phase_angles = [0];
 
 % Sine Waves
-frequencies_sine = [50e3, 49e3, 51e3, 5e3, 200e3];
+% frequencies_sine = [50e3, 49e3, 51e3, 5e3, 200e3];
+frequencies_sine = [50e3];
 sine_waves = zeros(length(frequencies_sine), length(phase_angles), N);
 
 for i = 1:length(frequencies_sine)
@@ -41,7 +43,7 @@ rectangular_waves = zeros(length(frequencies_rectangular), length(phase_angles),
 for i = 1:length(frequencies_rectangular)
     for j = 1:length(phase_angles)
         frequency = frequencies_rectangular(i);
-        phase = phase_angles(i);
+        phase = phase_angles(j);
         rectangular_wave = square(2*pi*frequency*t + deg2rad(phase));
         rectangular_waves(i, j, :) = scaleToUint(rectangular_wave, INPUT_BIT_LEN);
     end
@@ -97,26 +99,60 @@ end
 
 % 4. Goertzel Filter
 
-% f = [697 770 852 941 1209 1336 1477];
-freq_indices = round(F_detect/Fs*N) + 1;
-% % transform to single precision because goertzel only accepts single
-% dft_data = goertzel(single(data),freq_indices);
 
-% figure; % open a new figure window
-% stem(f,abs(dft_data))
+for i = 1:length(frequencies_sine)
+    for j = 1:length(phase_angles)
+        freq_indices = round(F_detect/Fs*N) + 1;
+        % transform to single precision because goertzel only accepts single
+        dft_data = goertzel(single(sine_waves(i, j, :)),freq_indices);
+        fprintf("%d", dft_data);
+    end
+end
 
-% % Adjusting subplot spacing
-% sgtitle('Waveform Plots');
+figure; % open a new figure window
+stem(F_detect,abs(dft_data))
 
-% ax = gca;
-% ax.XTick = f;
-% xlabel('Frequency (Hz)')
-% ylabel('DFT Magnitude')
+% Adjusting subplot spacing
+sgtitle('Waveform Plots');
+
+ax = gca;
+ax.XTick = F_detect;
+xlabel('Frequency (Hz)')
+ylabel('DFT Magnitude')
 
 % 5. Sanity Check: plot the result of Goertzel Filter
 
 % 6. Output the waveforms to a file
 % each entity occupies a row in the file
+
+% File path and name prefix
+filePrefix = 'sine_wave';
+
+% Fixed width and padding with zeros
+% maximum is 16383 -> 0x3FFF, hence lineWidth = 4
+lineWidth = ceil(INPUT_BIT_LEN / 4);
+
+% Loop through sine_waves and write each waveform to a separate file
+for i = 1:length(frequencies_sine)
+    for j = 1:length(phase_angles)
+        % Generate the file name
+        nameFreq = sprintf('%.0f%sHz', frequencies_sine(i) / 10^(3 * floor(log10(abs(frequencies_sine(i)))/3)), suffix(frequencies_sine(i)));
+        fileName = sprintf('%s_%s_%ddeg.txt', filePrefix, nameFreq, phase_angles(j));
+        
+        % Open the file for writing
+        fileID = fopen(fileName, 'w');
+        
+        % Write each entity of the sine_wave to a line in the file
+        for j = 1:size(sine_waves, 3)
+            fprintf(fileID, '%0*X\n', lineWidth, sine_waves(i, j));
+        end
+        
+        % Close the file
+        fclose(fileID);
+    end
+end
+
+% TODO: filter output
 
 % 99. Function definitions in a script must appear at the end of the file
 % for waveform generation
@@ -125,4 +161,13 @@ function output = scaleToUint(input, bit_len)
     scaled = (input + 1) * (2^bit_len - 1) / 2;
     % Convert the scaled waveforms to (bit_len)-bit unsigned integers
     output = uint16(scaled);
+end
+
+% Function to generate SI unit suffix
+function s = suffix(num)
+    units = {'', 'k', 'M', 'G', 'T', 'P', 'E'};
+    exponent = log10(abs(num));
+    exponent = floor(exponent / 3);
+    exponent = max(min(exponent, numel(units)-1), 0);
+    s = units{exponent+1};
 end

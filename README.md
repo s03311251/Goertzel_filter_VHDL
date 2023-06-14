@@ -7,7 +7,7 @@ Never a bad idea to put an anime girl in your README.
 * Illustration: Kouhaku Kuroboshi
 * Source: ["Ninomae Ina'nis Birthday Celebration 2023" Merch Complete Set](https://shop.geekjack.net/products/ninomae-inanis-birthday-celebration-2023-merch-complete-set?variant=45094943785206)
 
-* Homework for MOD2-02 Microelectronics & HW/SW-Co-Design, Summer Semester 2023
+Homework for MOD2-02 Microelectronics & HW/SW-Co-Design, Summer Semester 2023
 
 * Folder structure:
   * TODO
