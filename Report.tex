@@ -38,12 +38,14 @@ Every Nth sample, the actual tone detection takes place. You deal with blocks of
 
 \textbf{Sampling Rate}
 The standard Nyquist guidelines should be followed when determining the sample rate: the sampling rate must be at least twice as high as the highest frequency of interest. Every detected frequency must be an integer component of the sampling rate. According to our project, the sample frequency is 1MHz and the frequency to be detected is 50 kHz which are adequate values.
+
 \textbf{Number of samples}
 Number of samples, in other words, Goertzel block size N controls the frequency resolution (also known as bin width). This would lead us to strive for the highest N possible in order to achieve the highest frequency resolution. The problem is that when N increases, it takes longer to identify each tone since you have to wait longer for all of the samples to arrive. For instance, 400 samples will be gathered in 100ms at 4kHz sampling. We must use compatible values of N if you want to be able to identify short-duration tones. The correlation between the sample rate and the target frequencies also affects our decision on N. The frequencies should ideally be in the middle of their respective bins. The desired frequencies should therefore be integer multiples of f /N. According to our project, number of samples in dataset N is 100 which perfectly fits the requirements.
+
 \textbf{Constants}
 The computation of the constants can be performed once we know our sample rate and block size:
-\[C=2cos⁡(2\pi k/N)\]
-\[C_i=cos(2\pi k/N)-jsin(2\pi k/N)=-e^{-j2\pi k/N}\]
+\[C=2cos(2\pi \frac{k}{N})\]
+\[C_i=cos(2\pi \frac{k}{N})-jsin(2\pi \frac{k}{N})=-e^{-j2\pi \frac{k}{N}}\]
 
 To break down the formula, let's examine each component:
 \begin{itemize}
