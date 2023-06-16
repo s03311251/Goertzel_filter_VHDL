@@ -30,10 +30,57 @@ ARCHITECTURE testbench_arch OF goertzel_tb IS
     CONSTANT EXPECTED_DIR : STRING      := "test_cases/expected/";
     CONSTANT TEST_CASE    : STRING_LIST := (
         to_100_char("sine_wave_50kHz_0deg.txt" & NUL),
-        to_100_char("sine_wave_50kHz_0deg.txt" & NUL)
+        to_100_char("sine_wave_50kHz_30deg.txt" & NUL),
+        to_100_char("sine_wave_50kHz_45deg.txt" & NUL),
+        to_100_char("sine_wave_50kHz_90deg.txt" & NUL),
+        to_100_char("sine_wave_50kHz_120deg.txt" & NUL),
+        to_100_char("sine_wave_49kHz_0deg.txt" & NUL),
+        to_100_char("sine_wave_49kHz_30deg.txt" & NUL),
+        to_100_char("sine_wave_49kHz_45deg.txt" & NUL),
+        to_100_char("sine_wave_49kHz_90deg.txt" & NUL),
+        to_100_char("sine_wave_49kHz_120deg.txt" & NUL),
+        to_100_char("sine_wave_51kHz_0deg.txt" & NUL),
+        to_100_char("sine_wave_51kHz_30deg.txt" & NUL),
+        to_100_char("sine_wave_51kHz_45deg.txt" & NUL),
+        to_100_char("sine_wave_51kHz_90deg.txt" & NUL),
+        to_100_char("sine_wave_51kHz_120deg.txt" & NUL),
+        to_100_char("sine_wave_5kHz_0deg.txt" & NUL),
+        to_100_char("sine_wave_5kHz_30deg.txt" & NUL),
+        to_100_char("sine_wave_5kHz_45deg.txt" & NUL),
+        to_100_char("sine_wave_5kHz_90deg.txt" & NUL),
+        to_100_char("sine_wave_5kHz_120deg.txt" & NUL),
+        to_100_char("sine_wave_200kHz_0deg.txt" & NUL),
+        to_100_char("sine_wave_200kHz_30deg.txt" & NUL),
+        to_100_char("sine_wave_200kHz_45deg.txt" & NUL),
+        to_100_char("sine_wave_200kHz_90deg.txt" & NUL),
+        to_100_char("sine_wave_200kHz_120deg.txt" & NUL),
+        to_100_char("rectangular_wave_50kHz_0deg.txt" & NUL),
+        to_100_char("rectangular_wave_50kHz_30deg.txt" & NUL),
+        to_100_char("rectangular_wave_50kHz_45deg.txt" & NUL),
+        to_100_char("rectangular_wave_50kHz_90deg.txt" & NUL),
+        to_100_char("rectangular_wave_50kHz_120deg.txt" & NUL),
+        to_100_char("rectangular_wave_16kHz_0deg.txt" & NUL),
+        to_100_char("rectangular_wave_16kHz_30deg.txt" & NUL),
+        to_100_char("rectangular_wave_16kHz_45deg.txt" & NUL),
+        to_100_char("rectangular_wave_16kHz_90deg.txt" & NUL),
+        to_100_char("rectangular_wave_16kHz_120deg.txt" & NUL),
+        to_100_char("rectangular_wave_10kHz_0deg.txt" & NUL),
+        to_100_char("rectangular_wave_10kHz_30deg.txt" & NUL),
+        to_100_char("rectangular_wave_10kHz_45deg.txt" & NUL),
+        to_100_char("rectangular_wave_10kHz_90deg.txt" & NUL),
+        to_100_char("rectangular_wave_10kHz_120deg.txt" & NUL),
+        to_100_char("rectangular_wave_200kHz_0deg.txt" & NUL),
+        to_100_char("rectangular_wave_200kHz_30deg.txt" & NUL),
+        to_100_char("rectangular_wave_200kHz_45deg.txt" & NUL),
+        to_100_char("rectangular_wave_200kHz_90deg.txt" & NUL),
+        to_100_char("rectangular_wave_200kHz_120deg.txt" & NUL),
+        to_100_char("triangle_wave_50kHz_0deg.txt" & NUL),
+        to_100_char("triangle_wave_50kHz_90deg.txt" & NUL)
     );
-    CONSTANT LINE_BW : POSITIVE := 16;
-    CONSTANT CLK_T   : TIME     := 10 ns;
+
+    CONSTANT SIG_LINE_BW : POSITIVE := 16; -- SIG_BW, rounded up to nearest multiple of 4
+    CONSTANT EXP_LINE_BW : POSITIVE := 32;
+    CONSTANT CLK_T       : TIME     := 10 ns;
 
     SIGNAL clk     : STD_LOGIC := '0';
     SIGNAL rst     : STD_LOGIC := '0';
@@ -95,14 +142,15 @@ BEGIN
 
         VARIABLE fstatus : file_open_status;
 
-        VARIABLE file_line : line;
-        VARIABLE var_data  : UNSIGNED(LINE_BW - 1 DOWNTO 0);
-
+        VARIABLE file_line    : line;
+        VARIABLE var_data     : UNSIGNED(SIG_LINE_BW - 1 DOWNTO 0);
+        VARIABLE var_expected : SIGNED(EXP_LINE_BW - 1 DOWNTO 0);
     BEGIN
 
         -- initialize
 
-        var_data := (OTHERS => '0');
+        var_data     := (OTHERS => '0');
+        var_expected := (OTHERS => '0');
         eof       <= '0';
         Sample_SI <= (OTHERS => '0');
         En_SI     <= '0';
@@ -111,8 +159,7 @@ BEGIN
         -- open input signal files
 
         FOR i IN TEST_CASE'RANGE LOOP
-            REPORT "List element " & INTEGER'image(i) & ": " & TEST_CASE(i);
-
+            -- open input signal file
             file_open(fstatus, fptr, INPUT_DIR & TEST_CASE(i), read_mode);
 
             WHILE (NOT endfile(fptr)) LOOP
@@ -124,9 +171,37 @@ BEGIN
             END LOOP;
 
             file_close(fptr);
+
+            -- wait for DUT to finish            
             En_SI <= '0';
             WAIT UNTIL Done_SO = '1';
+            REPORT "Test case " & INTEGER'IMAGE(i) & ": " & TEST_CASE(i);
+            -- REPORT "s: " & INTEGER'IMAGE(to_integer(Prod_SO)) & " " & INTEGER'IMAGE(to_integer(Prod_q_SO));
             -- WAIT FOR 1000 ns;
+
+            -- open expected result file
+            file_open(fstatus, fptr, EXPECTED_DIR & TEST_CASE(i), read_mode);
+
+            WHILE (NOT endfile(fptr)) LOOP
+                readline(fptr, file_line);
+                hread(file_line, var_expected); -- hex
+                IF (resize(var_expected, Prod_SO'LENGTH) = Prod_SO) THEN
+                    REPORT "PASS";
+                ELSE
+                    REPORT "FAIL, Expected Prod_SO: " & INTEGER'IMAGE(to_integer(resize(var_expected, Prod_SO'LENGTH))) & " Actual: " & INTEGER'IMAGE(to_integer(Prod_SO));
+                END IF;
+
+                readline(fptr, file_line);
+                hread(file_line, var_expected); -- hex
+                IF (resize(var_expected, Prod_q_SO'LENGTH) = Prod_q_SO) THEN
+                    REPORT "PASS";
+                ELSE
+                    REPORT "FAIL, Expected Prod_q_SO: " & INTEGER'IMAGE(to_integer(resize(var_expected, Prod_SO'LENGTH))) & " Actual: " & INTEGER'IMAGE(to_integer(Prod_q_SO));
+                    END IF;
+            END LOOP;
+
+            file_close(fptr);
+
         END LOOP;
 
         -- terminate

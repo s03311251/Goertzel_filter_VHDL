@@ -2,6 +2,7 @@ LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
 USE IEEE.NUMERIC_STD.ALL;
 USE IEEE.FIXED_PKG.ALL;
+USE IEEE.FIXED_FLOAT_TYPES.ALL;
 -- for constant calculation only (clog2()), still synthesizable
 USE IEEE.MATH_REAL.ALL;
 
@@ -72,7 +73,7 @@ BEGIN
     -- calculate the intermediate result
     Prod <= resize(
         to_sfixed(SIGNED('0' & Sample_SI), Prod) + -- TODO, should I add 1 more bit to rounding?
-        resize(COEFF * Prod_q_D, Prod) -
+        COEFF * Prod_q_D -
         Prod_qq_D, Prod);
 
     -- Magnitude_SO <= STD_LOGIC_VECTOR(resize(ABSQQ_D, Magnitude_SO'length)) WHEN Rst_RBI = '1' ELSE
@@ -83,10 +84,14 @@ BEGIN
     BEGIN
         IF rising_edge(Clk_CI) THEN
             -- REPORT "List element " & REAL'image(to_real(COEFF));
-            REPORT "Prod_SO " & INTEGER'image(to_integer(Prod_SO)) &
-                " Sample_SI " & INTEGER'image(to_integer(Sample_SI)) &
-                " COEFF*Prod_q_D " & INTEGER'image(to_integer(to_signed(resize(COEFF * Prod_q_D, Prod), Prod'LENGTH))) &
-                " Prod_qq_D " & INTEGER'image(to_integer(to_signed(Prod_qq_D, Prod'LENGTH)));
+
+            -- REPORT "Prod_SO " & INTEGER'image(to_integer(Prod_SO)) &
+            --     " Sample_SI " & INTEGER'image(to_integer(Sample_SI)) &
+            --     " COEFF*Prod_q_D " & INTEGER'image(to_integer(resize(COEFF * Prod_q_D, Prod))) &
+            --     -- " COEFF*Prod_q_D " & INTEGER'image(to_integer(COEFF * Prod_q_D)) &
+            --     -- " " & REAL'image(to_real(COEFF)) &
+            --     -- " " & INTEGER'image(to_integer(Prod_q_D)) &
+            --     " Prod_qq_D " & INTEGER'image(to_integer(Prod_qq_D));
 
             IF Rst_RBI = '1' THEN
                 Cnt_D     <= (OTHERS => '0');
@@ -115,10 +120,11 @@ BEGIN
                 END IF;
 
                 -- calculation finished
-                -- N - 3 because:
+                -- N - 2 because:
                 -- index of Cnt_D starts from 0 -> -1
                 -- Cnt_D starts counting 2 clk cycles after 1st sample arrives -> -2
-                IF (Active_V = '1' AND Cnt_D = to_unsigned(N - 3, Cnt_D'LENGTH)) THEN
+                -- test bench is fetching Prod_SO 1 clk cycle before  -> +1
+                IF (Active_V = '1' AND Cnt_D = to_unsigned(N - 2, Cnt_D'LENGTH)) THEN
                     Active_V := '0';
                     Done_SO <= '1';
                 END IF;
