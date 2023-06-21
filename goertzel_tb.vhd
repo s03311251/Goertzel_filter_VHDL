@@ -177,7 +177,6 @@ BEGIN
             WAIT UNTIL Done_SO = '1';
             REPORT "Test case " & INTEGER'IMAGE(i) & ": " & TEST_CASE(i);
             -- REPORT "s: " & INTEGER'IMAGE(to_integer(Prod_SO)) & " " & INTEGER'IMAGE(to_integer(Prod_q_SO));
-            -- WAIT FOR 1000 ns;
 
             -- open expected result file
             file_open(fstatus, fptr, EXPECTED_DIR & TEST_CASE(i), read_mode);
@@ -185,19 +184,21 @@ BEGIN
             WHILE (NOT endfile(fptr)) LOOP
                 readline(fptr, file_line);
                 hread(file_line, var_expected); -- hex
-                IF (resize(var_expected, Prod_SO'LENGTH) = Prod_SO) THEN
-                    REPORT "PASS";
-                ELSE
-                    REPORT "FAIL, Expected Prod_SO: " & INTEGER'IMAGE(to_integer(resize(var_expected, Prod_SO'LENGTH))) & " Actual: " & INTEGER'IMAGE(to_integer(Prod_SO));
-                END IF;
+                -- IF (resize(var_expected, Prod_SO'LENGTH) = Prod_SO) THEN
+                ASSERT (resize(var_expected, Prod_SO'LENGTH) = Prod_SO)
+                --     REPORT "PASS";
+                -- ELSE
+                REPORT "FAIL, Expected Prod_SO: " & INTEGER'IMAGE(to_integer(resize(var_expected, Prod_SO'LENGTH))) & " Actual: " & INTEGER'IMAGE(to_integer(Prod_SO)) SEVERITY WARNING;
+                -- END IF;
 
                 readline(fptr, file_line);
                 hread(file_line, var_expected); -- hex
-                IF (resize(var_expected, Prod_q_SO'LENGTH) = Prod_q_SO) THEN
-                    REPORT "PASS";
-                ELSE
-                    REPORT "FAIL, Expected Prod_q_SO: " & INTEGER'IMAGE(to_integer(resize(var_expected, Prod_SO'LENGTH))) & " Actual: " & INTEGER'IMAGE(to_integer(Prod_q_SO));
-                    END IF;
+                -- IF (resize(var_expected, Prod_q_SO'LENGTH) = Prod_q_SO) THEN
+                ASSERT (resize(var_expected, Prod_q_SO'LENGTH) = Prod_q_SO)
+                --     REPORT "PASS";
+                -- ELSE
+                REPORT "FAIL, Expected Prod_q_SO: " & INTEGER'IMAGE(to_integer(resize(var_expected, Prod_SO'LENGTH))) & " Actual: " & INTEGER'IMAGE(to_integer(Prod_q_SO)) SEVERITY WARNING;
+                -- END IF;
             END LOOP;
 
             file_close(fptr);

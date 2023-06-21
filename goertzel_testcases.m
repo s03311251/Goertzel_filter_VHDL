@@ -6,12 +6,12 @@ F_detect = 50e3; % frequency to detect
 N = 100; % number of samples
 INPUT_BIT_LEN = 14; % number of input bit length
 INPUT_SWING = 14; % swing of input signal
-OUTPUT_BIT_LEN = 18; % number of output bit length
+INT_BIT_LEN = 18; % number of internal bit length
 
 % VHDL impelmentation related
 % bit width of COEFF due to internal data bit width limitation
 % 18 - 3 because there're 2 bits before decimal point, 15 after, 1 sign bit
-COEFF_BW = OUTPUT_BIT_LEN - 3;
+COEFF_BW = INT_BIT_LEN - 3;
 LSB_TRUNCATE = 5; % internal data's LSB truncated, as implemented in VHDL
 
 % 2. Generate the waveforms
@@ -21,8 +21,10 @@ phase_angles = [0, 30, 45, 90, 120];
 
 % Sine Waves
 frequencies_sine = [50e3, 49e3, 51e3, 5e3, 200e3];
-% frequencies_sine = [50e3];
+% frequencies_sine = [49e3];
 sine_waves = zeros(length(frequencies_sine), length(phase_angles), N, "int32");
+sine_waves_combined_single = zeros(length(phase_angles), N, "single");
+sine_waves_combined = zeros(length(phase_angles), N, "int32");
 
 for i = 1:length(frequencies_sine)
     for j = 1:length(phase_angles)
@@ -30,6 +32,7 @@ for i = 1:length(frequencies_sine)
         phase = phase_angles(j);
         sine_wave = sin(2*pi*frequency*t + deg2rad(phase));
         sine_waves(i, j, :) = scaleToInt(sine_wave, INPUT_BIT_LEN, INPUT_SWING);
+        sine_waves_combined_single(j, :) = sine_waves_combined_single(j, :) + sine_wave / length(frequencies_sine);
 
         % % Sanity Check for scaleToInt()
         % disp(['Frequency: ', num2str(frequency), ', phase: ', num2str(phase)]);
@@ -42,6 +45,22 @@ for i = 1:length(frequencies_sine)
         % index = find(sine_wave == 0.0);
         % disp(['Zero: ', num2str(0.0), ', scaled: ', num2str(sine_waves(i, j, index)), ', index: ', num2str(index)]);
     end
+end
+
+for j = 1:length(phase_angles)
+    phase = phase_angles(j);
+    sine_waves_combined(j, :) = scaleToInt(sine_waves_combined_single(j, :), INPUT_BIT_LEN, INPUT_SWING);
+
+    % % Sanity Check for sine_waves_combined
+    % disp(['Phase: ', num2str(phase)]);
+    % min_value = min(sine_waves_combined(j, :));
+    % index = find(sine_waves_combined(j, :) == min_value);
+    % disp(['Min: ', num2str(min_value), ', scaled: ', num2str(sine_waves_combined(j, index)), ', index: ', num2str(index)]);
+    % max_value = max(sine_waves_combined(j, :));
+    % index = find(sine_waves_combined(j, :) == max_value);
+    % disp(['Max: ', num2str(max_value), ', scaled: ', num2str(sine_waves_combined(j, index)), ', index: ', num2str(index)]);
+    % index = find(sine_waves_combined(j, :) == 0.0);
+    % disp(['Zero: ', num2str(0.0), ', scaled: ', num2str(sine_waves_combined(j, index)), ', index: ', num2str(index)]);
 end
 
 % Rectangular Waves
@@ -77,6 +96,20 @@ end
 %     wave = reshape(sine_waves(i, 1, :), 1, []);
 %     plot(t, wave);
 %     title(['Sine Wave ', num2str(i)]);
+%     xlabel('Time (s)');
+%     ylabel('Amplitude');
+% end
+
+% % Plotting sine_waves_combined
+% figure;
+% t = (0:N-1) / Fs;
+% for i = 1:size(sine_waves_combined, 1)
+%     figure;
+%     % subplot(size(sine_waves_combined, 1), 1, i);
+%     % Extract a row from the 3D array as a 1D array
+%     wave = reshape(sine_waves_combined(i, :), 1, []);
+%     plot(t, wave);
+%     title(['Sine Wave (Combined) ', num2str(i)]);
 %     xlabel('Time (s)');
 %     ylabel('Amplitude');
 % end
@@ -130,6 +163,14 @@ end
 % xlabel('Frequency (Hz)')
 % ylabel('DFT Magnitude')
 
+% sine_waves_combined_dft = zeros(length(phase_angles), 2, "int32");
+% for i = 1:length(phase_angles)
+%     dft_input = reshape(sine_waves_combined(i, :), 1, []);
+%     [s, s_prev] = goertzel_filter(dft_input, F_detect, Fs, COEFF_BW, LSB_TRUNCATE);
+%     sine_waves_combined_dft(i, :) = [s, s_prev];
+%     fprintf("SIN_COMB phase: %d s: %d %d\n", phase_angles(i), s, s_prev);
+% end
+
 rectangular_waves_dft = zeros(length(frequencies_rectangular), length(phase_angles), 2, "int32");
 for i = 1:length(frequencies_rectangular)
     for j = 1:length(phase_angles)
@@ -161,13 +202,12 @@ mkdir test_cases/expected
 % Fixed width and padding with zeros
 % in hex format, hence /4
 sigLineWidth = ceil(INPUT_BIT_LEN / 4);
-targetLineWidth = ceil(OUTPUT_BIT_LEN / 4);
+targetLineWidth = 8;
 
 % Loop through input signals & DFT results, and write each waveform to a separate file
 filePrefix = 'sine_wave';
 for i = 1:length(frequencies_sine)
     for j = 1:length(phase_angles)
-        % Generate the file name
         nameFreq = sprintf('%.0f%sHz', frequencies_sine(i) / 10^(3 * floor(log10(abs(frequencies_sine(i)))/3)), suffix(frequencies_sine(i)));
 
         fileName = sprintf('test_cases/input/%s_%s_%ddeg.txt', filePrefix, nameFreq, phase_angles(j));
@@ -181,7 +221,6 @@ end
 filePrefix = 'rectangular_wave';
 for i = 1:length(frequencies_rectangular)
     for j = 1:length(phase_angles)
-        % Generate the file name
         nameFreq = sprintf('%.0f%sHz', frequencies_rectangular(i) / 10^(3 * floor(log10(abs(frequencies_rectangular(i)))/3)), suffix(frequencies_rectangular(i)));
 
         fileName = sprintf('test_cases/input/%s_%s_%ddeg.txt', filePrefix, nameFreq, phase_angles(j));
@@ -193,14 +232,11 @@ for i = 1:length(frequencies_rectangular)
 end
 
 filePrefix = 'triangle_wave';
-for i = 1:length(phase_angles)
-    % Generate the file name
-    nameFreq = sprintf('%.0f%sHz', frequencies_triangle(i) / 10^(3 * floor(log10(abs(frequencies_triangle(i)))/3)), suffix(frequencies_triangle(i)));
-
-    fileName = sprintf('test_cases/input/%s_%ddeg.txt', filePrefix, phase_angles(j));
+for i = 1:length(phase_angles_triangle)
+    fileName = sprintf('test_cases/input/%s_50kHz_%ddeg.txt', filePrefix, phase_angles_triangle(i));
     write_to_file(triangle_waves(i, :), fileName, sigLineWidth);
 
-    fileName = sprintf('test_cases/expected/%s_%ddeg.txt', filePrefix, phase_angles(j));
+    fileName = sprintf('test_cases/expected/%s_50kHz_%ddeg.txt', filePrefix, phase_angles_triangle(i));
     write_to_file(triangle_waves_dft(i, :), fileName, targetLineWidth);
 end
 
@@ -240,7 +276,8 @@ function [sN, sNprev] = goertzel_filter(signal, targetFrequency, samplingRate, c
     coefficient = 2 * cosine;
     % fprintf("COEFF %.20f\n", coefficient);
     % round acconding to coeffBw
-    coefficient = round(coefficient * 2 ^ coeffBw) / (2 ^ coeffBw);
+    % VHDL follows the rounding rule of IEEE 754 (round to nearest even), hence convergent() instead of round()
+    coefficient = convergent(coefficient * 2 ^ coeffBw) / (2 ^ coeffBw);
     % fprintf("COEFF %.20f\n", coefficient); % 1.902099609375
 
     s = zeros(N, 1); % First intermediate variable
@@ -248,18 +285,21 @@ function [sN, sNprev] = goertzel_filter(signal, targetFrequency, samplingRate, c
     sprev2 = 0; % Previous s[n-2]
 
     % Iterate through the signal
-    min = 0.0;
-    max = 0.0;
+    % min = 0.0;
+    % max = 0.0;
     for n = 1:N
         % s(n) = signal(n) + coefficient * sprev - sprev2;
 
         % truncate according to lsbTruncate
-        multi_prod_trunc = round(coefficient * sprev / 2 ^ lsbTruncate) * (2 ^ lsbTruncate);
-        s(n) = round((signal(n) + multi_prod_trunc - sprev2) / 2 ^ lsbTruncate) * (2 ^ lsbTruncate);
+        % multi_prod_trunc = round(coefficient * sprev / 2 ^ lsbTruncate) * (2 ^ lsbTruncate);
+        multi_prod = convergent(coefficient * sprev);
+        % s_tmp = signal(n) + multi_prod - sprev2;
+        s(n) = convergent(single((signal(n) + multi_prod - sprev2) / 2 ^ lsbTruncate)) * (2 ^ lsbTruncate);
 
-        % % debug
-        % fprintf("Prod_SO %d Sample_SI %d COEFF*Prod_q_D %d Prod_qq_D %d\n", s(n), signal(n), multi_prod_trunc, sprev2);
-        % fprintf("n: %d Prod_SO %f Sample_SI %f COEFF*Prod_q_D %f %.20f %f Prod_qq_D %f\n", n, s(n), signal(n), multi_prod_trunc, coefficient, sprev, sprev2);        
+        % debug
+        % fprintf("Prod_SO %d Sample_SI %d COEFF*Prod_q_D %d Prod_qq_D %d\n", s(n), signal(n), multi_prod, sprev2);
+        % fprintf("Prod_SO %d Sample_SI %d COEFF*Prod_q_D %d Prod_qq_D %d s_tmp %f\n", s(n), signal(n), multi_prod, sprev2, s_tmp);
+        % fprintf("n: %d Prod_SO %f Sample_SI %f COEFF*Prod_q_D %f %.20f %f Prod_qq_D %f\n", n, s(n), signal(n), multi_prod, coefficient, sprev, sprev2);        
 
         sprev2 = sprev;
         sprev = s(n);
@@ -279,7 +319,18 @@ function [sN, sNprev] = goertzel_filter(signal, targetFrequency, samplingRate, c
     sN = s(N);
     sNprev = s(N-1);
     magnitude = sqrt(double(sN^2 + sNprev^2 - sN * sNprev * coefficient));
-    disp(magnitude);
+
+    % try Ali's magnitude calculation
+    beta = w * ( N - 1 );
+    a = cos(beta);
+    b = -sin(beta);
+    c = sin(w) * sin(beta) - cos(w) * cos(beta);
+    d = sin(2 * pi * k);
+
+    magnitude2_real = a * sN + c * sNprev;
+    magnitude2_imag = b * sN + d * sNprev;
+    magnitude2 = sqrt(magnitude2_real ^ 2 + magnitude2_imag ^ 2);
+    fprintf("ori: %f Ali: %f\n", magnitude, magnitude2);
 
     % % Compute the FFT
     % f = (0:N-1) * (samplingRate / N);
@@ -312,7 +363,9 @@ function write_to_file(signal, fileName, lineWidth)
 
     % Write each entity of the sine_wave to a line in the file
     for k = 1:length(signal)
-        fprintf(fileID, '%0*X\n', lineWidth, signal(k));
+        % fprintf(fileID, '%0*X\n', lineWidth, signal(k));
+        % dec2hex() can handle negative numbers
+        fprintf(fileID, '%s\n', dec2hex(signal(k), lineWidth));
     end
 
     % Close the file

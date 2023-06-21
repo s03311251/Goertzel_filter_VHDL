@@ -13,15 +13,15 @@ ENTITY goertzel IS
         INT_BW       : POSITIVE := 18;  -- bit width for internal data
         LSB_TRUNCATE : POSITIVE := 5;   -- truncate internal data's LSB to avoid overflow
 
-        -- Coefficient for multiplication with Prod_q_D = 2cos(2piK/Fs)
+        -- Coefficient for multiplication with Prod_q_D = 2cos(2pi Fk/Fs)
         --
         -- Sampling frequency (Fs) = 1 MHz
-        -- Target frequency (K) = 50 kHz
-        -- 2cos(2piK/Fs) = 2 * cos (2pi * 50E3 / 1E6) = 1.90211303259031 < 2
+        -- Target frequency (Fk) = 50 kHz
+        -- 2cos(2pi Fk/Fs) = 2 * cos (2pi * 50E3 / 1E6) = 1.90211303259031 < 2
         -- 2 bits for integer part, 1 bit for sign bit
         COEFF : SFIXED(2 DOWNTO 3 - INT_BW) := to_sfixed(1.90211303259031, 2, 3 - INT_BW)
 
-        -- -- coefficient for Magnitude_SO calculation = e^(-j 2piK/Fs)
+        -- -- coefficient for Magnitude_SO calculation = e^(-j 2pi Fk/Fs)
         -- -- = e^(-j * 2pi * 50E3 / 1E6)
         -- WNK
     );
@@ -64,6 +64,7 @@ ARCHITECTURE behavioural OF goertzel IS
     SIGNAL Active_D : STD_LOGIC := '0';
     -- intermediate result, delayed (z^-1) Prod
     SIGNAL Prod, Prod_q_D, Prod_qq_D : SFIXED(INT_BW + LSB_TRUNCATE - 1 DOWNTO LSB_TRUNCATE);
+    SIGNAL Prod_debug                : REAL;
 BEGIN
 
     -- Output
@@ -72,9 +73,18 @@ BEGIN
 
     -- calculate the intermediate result
     Prod <= resize(
-        to_sfixed(SIGNED('0' & Sample_SI), Prod) + -- TODO, should I add 1 more bit to rounding?
+        -- to_sfixed(SIGNED('0' & Sample_SI), Prod) + -- TODO, should I add 1 more bit to rounding?
+        to_sfixed(SIGNED('0' & Sample_SI), Prod'HIGH, 0) +
         COEFF * Prod_q_D -
         Prod_qq_D, Prod);
+    Prod_debug <= to_real(
+        -- to_sfixed(SIGNED('0' & Sample_SI), Prod'HIGH, 0));
+        resize(to_sfixed(SIGNED('0' & Sample_SI), Prod'HIGH, 0) +
+        COEFF * Prod_q_D -
+        Prod_qq_D, Prod'HIGH, 0));
+        -- to_sfixed(SIGNED('0' & Sample_SI), Prod'HIGH, 0) +
+        -- COEFF * Prod_q_D -
+        -- Prod_qq_D);
 
     -- Magnitude_SO <= STD_LOGIC_VECTOR(resize(ABSQQ_D, Magnitude_SO'length)) WHEN Rst_RBI = '1' ELSE
     -- STD_LOGIC_VECTOR(resize(scale_factor * ABSQQ_D, Magnitude_O'length));
@@ -86,12 +96,14 @@ BEGIN
             -- REPORT "List element " & REAL'image(to_real(COEFF));
 
             -- REPORT "Prod_SO " & INTEGER'image(to_integer(Prod_SO)) &
+            --     -- " " & to_string(Prod_debug, "%.3f") &
             --     " Sample_SI " & INTEGER'image(to_integer(Sample_SI)) &
-            --     " COEFF*Prod_q_D " & INTEGER'image(to_integer(resize(COEFF * Prod_q_D, Prod))) &
-            --     -- " COEFF*Prod_q_D " & INTEGER'image(to_integer(COEFF * Prod_q_D)) &
+            --     " COEFF*Prod_q_D " & INTEGER'image(to_integer(COEFF * Prod_q_D)) &
             --     -- " " & REAL'image(to_real(COEFF)) &
             --     -- " " & INTEGER'image(to_integer(Prod_q_D)) &
             --     " Prod_qq_D " & INTEGER'image(to_integer(Prod_qq_D));
+
+            -- REPORT "ROUND TO EVEN NO. " & INTEGER'image(to_integer(to_sfixed(-1.5, 32, 0)));
 
             IF Rst_RBI = '1' THEN
                 Cnt_D     <= (OTHERS => '0');
