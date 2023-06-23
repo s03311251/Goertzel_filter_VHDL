@@ -10,8 +10,8 @@ INT_BIT_LEN = 18; % number of internal bit length
 
 % VHDL impelmentation related
 % bit width of COEFF due to internal data bit width limitation
-% 18 - 3 because there're 2 bits before decimal point, 15 after, 1 sign bit
-COEFF_BW = INT_BIT_LEN - 3;
+% 18 - 2 = 16 bits for fractional part
+COEFF_BW = INT_BIT_LEN - 2;
 LSB_TRUNCATE = 5; % internal data's LSB truncated, as implemented in VHDL
 
 % 2. Generate the waveforms
@@ -240,8 +240,6 @@ for i = 1:length(phase_angles_triangle)
     write_to_file(triangle_waves_dft(i, :), fileName, targetLineWidth);
 end
 
-% TODO: filter output
-
 % 99. Function definitions in a script must appear at the end of the file
 % for waveform generation
 % function output = scaleToInt(input, bit_len, input_swing)
@@ -291,10 +289,10 @@ function [sN, sNprev] = goertzel_filter(signal, targetFrequency, samplingRate, c
 
         % truncate according to lsbTruncate
         % multi_prod_trunc = round(coefficient * sprev / 2 ^ lsbTruncate) * (2 ^ lsbTruncate);
-        multi_prod = coefficient * sprev;
+        multi_prod = floor(coefficient * sprev);
         % s_tmp = signal(n) + multi_prod - sprev2;
         % remove LSB instead of rounding, hence floor() instead of convergent()
-        s(n) = floor(single((signal(n) + multi_prod - sprev2) / 2 ^ lsbTruncate)) * (2 ^ lsbTruncate);
+        s(n) = floor(double(signal(n) + multi_prod - sprev2) / 2 ^ lsbTruncate) * (2 ^ lsbTruncate);
 
         % debug
         % fprintf("Prod_SO %d Sample_SI %d COEFF*Prod_q_D %d Prod_qq_D %d\n", s(n), signal(n), multi_prod, sprev2);
