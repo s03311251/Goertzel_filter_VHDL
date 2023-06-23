@@ -276,7 +276,6 @@ function [sN, sNprev] = goertzel_filter(signal, targetFrequency, samplingRate, c
     coefficient = 2 * cosine;
     % fprintf("COEFF %.20f\n", coefficient);
     % round acconding to coeffBw
-    % VHDL follows the rounding rule of IEEE 754 (round to nearest even), hence convergent() instead of round()
     coefficient = convergent(coefficient * 2 ^ coeffBw) / (2 ^ coeffBw);
     % fprintf("COEFF %.20f\n", coefficient); % 1.902099609375
 
@@ -292,9 +291,10 @@ function [sN, sNprev] = goertzel_filter(signal, targetFrequency, samplingRate, c
 
         % truncate according to lsbTruncate
         % multi_prod_trunc = round(coefficient * sprev / 2 ^ lsbTruncate) * (2 ^ lsbTruncate);
-        multi_prod = convergent(coefficient * sprev);
+        multi_prod = coefficient * sprev;
         % s_tmp = signal(n) + multi_prod - sprev2;
-        s(n) = convergent(single((signal(n) + multi_prod - sprev2) / 2 ^ lsbTruncate)) * (2 ^ lsbTruncate);
+        % remove LSB instead of rounding, hence floor() instead of convergent()
+        s(n) = floor(single((signal(n) + multi_prod - sprev2) / 2 ^ lsbTruncate)) * (2 ^ lsbTruncate);
 
         % debug
         % fprintf("Prod_SO %d Sample_SI %d COEFF*Prod_q_D %d Prod_qq_D %d\n", s(n), signal(n), multi_prod, sprev2);

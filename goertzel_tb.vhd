@@ -3,7 +3,6 @@
 LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
 USE IEEE.NUMERIC_STD.ALL;
-USE IEEE.FIXED_PKG.ALL;
 -- USE IEEE.MATH_REAL.ALL;
 USE STD.TEXTIO.ALL;
 
@@ -92,13 +91,13 @@ ARCHITECTURE testbench_arch OF goertzel_tb IS
     CONSTANT SIG_BW       : POSITIVE                    := 14;
     CONSTANT INT_BW       : POSITIVE                    := 18;
     CONSTANT LSB_TRUNCATE : POSITIVE                    := 5;
-    CONSTANT COEFF        : SFIXED(2 DOWNTO 3 - INT_BW) := to_sfixed(1.90211303259031, 2, 3 - INT_BW);
+    CONSTANT COEFF        : SIGNED(INT_BW - 1 DOWNTO 0) := "01" & x"E6F1";
+    CONSTANT COEFF_F      : POSITIVE                    := INT_BW - 2;
     SIGNAL Sample_SI      : UNSIGNED(SIG_BW - 1 DOWNTO 0);
-    -- SIGNAL Magnitude_SO   : SIGNED(17 DOWNTO 0);
-    SIGNAL Prod_SO   : SIGNED(INT_BW + LSB_TRUNCATE - 1 DOWNTO 0);
-    SIGNAL Prod_q_SO : SIGNED(INT_BW + LSB_TRUNCATE - 1 DOWNTO 0);
-    SIGNAL En_SI     : STD_LOGIC;
-    SIGNAL Done_SO   : STD_LOGIC;
+    SIGNAL w0_SO          : SIGNED(INT_BW + LSB_TRUNCATE - 1 DOWNTO 0);
+    SIGNAL w1_SO          : SIGNED(INT_BW + LSB_TRUNCATE - 1 DOWNTO 0);
+    SIGNAL En_SI          : STD_LOGIC;
+    SIGNAL Done_SO        : STD_LOGIC;
 
     -- File I/O
     FILE fptr : text;
@@ -109,16 +108,21 @@ ARCHITECTURE testbench_arch OF goertzel_tb IS
             SIG_BW       : POSITIVE                    := 14;  -- bit width for input signal
             INT_BW       : POSITIVE                    := 18;  -- bit width for internal data
             LSB_TRUNCATE : POSITIVE                    := 5;   -- truncate internal data's LSB to avoid overflow
-            COEFF        : SFIXED(2 DOWNTO 3 - INT_BW) := to_sfixed(1.90211303259031, 2, 3 - INT_BW)
+            COEFF        : SIGNED(INT_BW - 1 DOWNTO 0) := "01" & x"E6F1";
+            COEFF_F      : POSITIVE                    := INT_BW - 2
         );
         PORT (
             Clk_CI    : IN STD_LOGIC;
             Rst_RBI   : IN STD_LOGIC;
             Sample_SI : IN UNSIGNED(SIG_BW - 1 DOWNTO 0);
-            Prod_SO   : OUT SIGNED(INT_BW + LSB_TRUNCATE - 1 DOWNTO 0);
-            Prod_q_SO : OUT SIGNED(INT_BW + LSB_TRUNCATE - 1 DOWNTO 0);
-            En_SI     : IN STD_LOGIC;
-            Done_SO   : OUT STD_LOGIC
+            w0_SO     : OUT SIGNED(INT_BW + LSB_TRUNCATE - 1 DOWNTO 0);
+            w1_SO     : OUT SIGNED(INT_BW + LSB_TRUNCATE - 1 DOWNTO 0);
+
+            -- Controls
+            -- enable, active high
+            En_SI : IN STD_LOGIC;
+            -- active high, keep high for 1 clk cycle when finished
+            Done_SO : OUT STD_LOGIC
         );
     END COMPONENT;
 
@@ -176,7 +180,7 @@ BEGIN
             En_SI <= '0';
             WAIT UNTIL Done_SO = '1';
             REPORT "Test case " & INTEGER'IMAGE(i) & ": " & TEST_CASE(i);
-            -- REPORT "s: " & INTEGER'IMAGE(to_integer(Prod_SO)) & " " & INTEGER'IMAGE(to_integer(Prod_q_SO));
+            -- REPORT "s: " & INTEGER'IMAGE(to_integer(w0_SO)) & " " & INTEGER'IMAGE(to_integer(w1_SO));
 
             -- open expected result file
             file_open(fstatus, fptr, EXPECTED_DIR & TEST_CASE(i), read_mode);
@@ -184,20 +188,20 @@ BEGIN
             WHILE (NOT endfile(fptr)) LOOP
                 readline(fptr, file_line);
                 hread(file_line, var_expected); -- hex
-                -- IF (resize(var_expected, Prod_SO'LENGTH) = Prod_SO) THEN
-                ASSERT (resize(var_expected, Prod_SO'LENGTH) = Prod_SO)
+                -- IF (resize(var_expected, w0_SO'LENGTH) = w0_SO) THEN
+                ASSERT (resize(var_expected, w0_SO'LENGTH) = w0_SO)
                 --     REPORT "PASS";
                 -- ELSE
-                REPORT "FAIL, Expected Prod_SO: " & INTEGER'IMAGE(to_integer(resize(var_expected, Prod_SO'LENGTH))) & " Actual: " & INTEGER'IMAGE(to_integer(Prod_SO)) SEVERITY WARNING;
+                REPORT "FAIL, Expected w0_SO: " & INTEGER'IMAGE(to_integer(resize(var_expected, w0_SO'LENGTH))) & " Actual: " & INTEGER'IMAGE(to_integer(w0_SO)) SEVERITY WARNING;
                 -- END IF;
 
                 readline(fptr, file_line);
                 hread(file_line, var_expected); -- hex
-                -- IF (resize(var_expected, Prod_q_SO'LENGTH) = Prod_q_SO) THEN
-                ASSERT (resize(var_expected, Prod_q_SO'LENGTH) = Prod_q_SO)
+                -- IF (resize(var_expected, w1_SO'LENGTH) = w1_SO) THEN
+                ASSERT (resize(var_expected, w1_SO'LENGTH) = w1_SO)
                 --     REPORT "PASS";
                 -- ELSE
-                REPORT "FAIL, Expected Prod_q_SO: " & INTEGER'IMAGE(to_integer(resize(var_expected, Prod_SO'LENGTH))) & " Actual: " & INTEGER'IMAGE(to_integer(Prod_q_SO)) SEVERITY WARNING;
+                REPORT "FAIL, Expected w1_SO: " & INTEGER'IMAGE(to_integer(resize(var_expected, w0_SO'LENGTH))) & " Actual: " & INTEGER'IMAGE(to_integer(w1_SO)) SEVERITY WARNING;
                 -- END IF;
             END LOOP;
 
@@ -219,15 +223,16 @@ BEGIN
         SIG_BW       => SIG_BW,
         INT_BW       => INT_BW,
         LSB_TRUNCATE => LSB_TRUNCATE,
-        COEFF        => COEFF
+        COEFF        => COEFF,
+        COEFF_F      => COEFF_F
     )
     PORT MAP(
 
         Clk_CI    => clk,
         Rst_RBI   => rst,
         Sample_SI => Sample_SI,
-        Prod_SO   => Prod_SO,
-        Prod_q_SO => Prod_q_SO,
+        w0_SO     => w0_SO,
+        w1_SO     => w1_SO,
         En_SI     => En_SI,
         Done_SO   => Done_SO
     );

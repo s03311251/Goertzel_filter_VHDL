@@ -1,9 +1,7 @@
 LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
 USE IEEE.NUMERIC_STD.ALL;
-USE IEEE.FIXED_PKG.ALL;
-USE IEEE.FIXED_FLOAT_TYPES.ALL;
--- for constant calculation only (clog2()), still synthesizable
+-- for constant calculation only (using clog2()), still synthesizable
 USE IEEE.MATH_REAL.ALL;
 
 ENTITY goertzel IS
@@ -17,9 +15,11 @@ ENTITY goertzel IS
         --
         -- Sampling frequency (Fs) = 1 MHz
         -- Target frequency (Fk) = 50 kHz
-        -- 2cos(2pi Fk/Fs) = 2 * cos (2pi * 50E3 / 1E6) = 1.90211303259031 < 2
-        -- 2 bits for integer part, 1 bit for sign bit
-        COEFF : SFIXED(2 DOWNTO 3 - INT_BW) := to_sfixed(1.90211303259031, 2, 3 - INT_BW)
+        -- 2cos(2pi Fk/Fs) = 2 * cos (2pi * 50E3 / 1E6) = 1.90211303259031
+        -- 1.90211303259031 -> rounded to 1.902099609375 = 0x1E6F1 * 2^-16
+        COEFF : SIGNED(INT_BW - 1 DOWNTO 0) := "01" & x"E6F1";
+        -- # of bits of fractional part of COEFF
+        COEFF_F : POSITIVE := INT_BW - 2
 
         -- -- coefficient for Magnitude_SO calculation = e^(-j 2pi Fk/Fs)
         -- -- = e^(-j * 2pi * 50E3 / 1E6)
@@ -34,8 +34,8 @@ ENTITY goertzel IS
         -- 1st sample should arrive the same clk cycle as the rising edge of En_SI
         Sample_SI : IN UNSIGNED(SIG_BW - 1 DOWNTO 0);
         -- Magnitude_SO : OUT SIGNED(17 DOWNTO 0);
-        Prod_SO   : OUT SIGNED(INT_BW + LSB_TRUNCATE - 1 DOWNTO 0);
-        Prod_q_SO : OUT SIGNED(INT_BW + LSB_TRUNCATE - 1 DOWNTO 0);
+        w0_SO : OUT SIGNED(INT_BW + LSB_TRUNCATE - 1 DOWNTO 0);
+        w1_SO : OUT SIGNED(INT_BW + LSB_TRUNCATE - 1 DOWNTO 0);
 
         -- Controls
         -- enable, active high
@@ -54,7 +54,7 @@ ARCHITECTURE behavioural OF goertzel IS
         RETURN POSITIVE IS
         VARIABLE num_in_log2 : POSITIVE;
     BEGIN
-        num_in_log2 := POSITIVE(ceil(log2(real(num))));
+        num_in_log2 := POSITIVE(ceil(log2(REAL(num))));
         RETURN num_in_log2;
     END FUNCTION clog2;
 
@@ -63,28 +63,39 @@ ARCHITECTURE behavioural OF goertzel IS
     -- state of the entity
     SIGNAL Active_D : STD_LOGIC := '0';
     -- intermediate result, delayed (z^-1) Prod
-    SIGNAL Prod, Prod_q_D, Prod_qq_D : SFIXED(INT_BW + LSB_TRUNCATE - 1 DOWNTO LSB_TRUNCATE);
-    SIGNAL Prod_debug                : REAL;
+    SIGNAL Prod_debug : REAL;
+
+    SIGNAL w0, w1_D, w2_D : SIGNED(INT_BW - 1 DOWNTO 0);
+    -- COEFF * w2_D
+    SIGNAL Multi_proc : SIGNED(INT_BW * 2 - 1 DOWNTO 0);
+    -- Sample_SI + COEFF * w2_D - Prod_qq_D
+    SIGNAL Sum : SIGNED(INT_BW + LSB_TRUNCATE - 1 DOWNTO 0);
 BEGIN
 
     -- Output
-    Prod_SO   <= to_signed(Prod, Prod_SO'LENGTH);
-    Prod_q_SO <= to_signed(Prod_q_D, Prod_q_SO'LENGTH);
+    w0_SO <= w0 & (LSB_TRUNCATE - 1 DOWNTO 0   => '0');
+    w1_SO <= w1_D & (LSB_TRUNCATE - 1 DOWNTO 0 => '0');
 
     -- calculate the intermediate result
-    Prod <= resize(
-        -- to_sfixed(SIGNED('0' & Sample_SI), Prod) + -- TODO, should I add 1 more bit to rounding?
-        to_sfixed(SIGNED('0' & Sample_SI), Prod'HIGH, 0) +
-        COEFF * Prod_q_D -
-        Prod_qq_D, Prod);
-    Prod_debug <= to_real(
-        -- to_sfixed(SIGNED('0' & Sample_SI), Prod'HIGH, 0));
-        resize(to_sfixed(SIGNED('0' & Sample_SI), Prod'HIGH, 0) +
-        COEFF * Prod_q_D -
-        Prod_qq_D, Prod'HIGH, 0));
-        -- to_sfixed(SIGNED('0' & Sample_SI), Prod'HIGH, 0) +
-        -- COEFF * Prod_q_D -
-        -- Prod_qq_D);
+    -- Prod_debug <= to_real(
+    --     -- to_sfixed(SIGNED('0' & Sample_SI), Prod'HIGH, 0));
+    --     resize(to_sfixed(SIGNED('0' & Sample_SI), Prod'HIGH, 0) +
+    --     COEFF * Prod_q_D -
+    --     Prod_qq_D, Prod'HIGH, 0));
+    -- -- to_sfixed(SIGNED('0' & Sample_SI), Prod'HIGH, 0) +
+    -- -- COEFF * Prod_q_D -
+    -- -- Prod_qq_D);
+
+    Multi_proc <= COEFF * w1_D;
+    -- COEFF: (INT_BW - COEFF_F - 1 downto -COEFF_F) -> (1 downto -16)
+    -- Prod_q_D: (INT_BW + LSB_TRUNCATE - 1 downto LSB_TRUNCATE -> 22 downto 5)
+    -- Multi_prod: ((INT_BW - COEFF_F - 1) + (INT_BW + LSB_TRUNCATE - 1)) downto -COEFF_F - (-LSB_TRUNCATE)) -> (23 downto -11)
+    -- take those to the right hand side of decimal point -> shift Multi_prod left by 11 bits (COEFF_F - LSB_TRUNCATE)
+    Sum <=
+        resize(SIGNED('0' & Sample_SI), Sum'LENGTH) +
+        Multi_proc(INT_BW + COEFF_F - 1 DOWNTO COEFF_F - LSB_TRUNCATE) -
+        shift_left(resize(w2_D, Sum'LENGTH), LSB_TRUNCATE);
+    w0 <= Sum(INT_BW + LSB_TRUNCATE - 1 DOWNTO LSB_TRUNCATE);
 
     -- Magnitude_SO <= STD_LOGIC_VECTOR(resize(ABSQQ_D, Magnitude_SO'length)) WHEN Rst_RBI = '1' ELSE
     -- STD_LOGIC_VECTOR(resize(scale_factor * ABSQQ_D, Magnitude_O'length));
@@ -93,24 +104,20 @@ BEGIN
         VARIABLE Active_V : STD_LOGIC;
     BEGIN
         IF rising_edge(Clk_CI) THEN
-            -- REPORT "List element " & REAL'image(to_real(COEFF));
-
-            -- REPORT "Prod_SO " & INTEGER'image(to_integer(Prod_SO)) &
-            --     -- " " & to_string(Prod_debug, "%.3f") &
-            --     " Sample_SI " & INTEGER'image(to_integer(Sample_SI)) &
-            --     " COEFF*Prod_q_D " & INTEGER'image(to_integer(COEFF * Prod_q_D)) &
-            --     -- " " & REAL'image(to_real(COEFF)) &
-            --     -- " " & INTEGER'image(to_integer(Prod_q_D)) &
-            --     " Prod_qq_D " & INTEGER'image(to_integer(Prod_qq_D));
+            -- REPORT "w0_SO " & INTEGER'image(to_integer(w0_SO)) &
+            --     " Sample_SI " & INTEGER'image(to_integer(to_sfixed(SIGNED('0' & Sample_SI)))) &
+            --     " COEFF*w2_D " & INTEGER'image(to_integer(Multi_proc(INT_BW + COEFF_F - 1 DOWNTO COEFF_F - LSB_TRUNCATE))) &
+            --     " w2_D " & INTEGER'image(to_integer(resize(w1_D, Sum'LENGTH))) &
+            --     " Prod_qq_D " & INTEGER'image(to_integer(resize(w2_D, Sum'LENGTH)));
 
             -- REPORT "ROUND TO EVEN NO. " & INTEGER'image(to_integer(to_sfixed(-1.5, 32, 0)));
 
             IF Rst_RBI = '1' THEN
-                Cnt_D     <= (OTHERS => '0');
-                Active_D  <= '0';
-                Prod_q_D  <= (OTHERS => '0');
-                Prod_qq_D <= (OTHERS => '0');
-                Done_SO   <= '0';
+                Cnt_D    <= (OTHERS => '0');
+                Active_D <= '0';
+                w1_D     <= (OTHERS => '0');
+                w2_D     <= (OTHERS => '0');
+                Done_SO  <= '0';
             ELSE
                 Active_V := Active_D;
                 Done_SO <= '0';
@@ -124,11 +131,11 @@ BEGIN
 
                 -- store intermediate result
                 IF (Active_V = '1') THEN
-                    Prod_q_D  <= Prod;
-                    Prod_qq_D <= Prod_q_D;
+                    w1_D <= w0;
+                    w2_D <= w1_D;
                 ELSE
-                    Prod_q_D  <= (OTHERS => '0');
-                    Prod_qq_D <= (OTHERS => '0');
+                    w1_D <= (OTHERS => '0');
+                    w2_D <= (OTHERS => '0');
                 END IF;
 
                 -- calculation finished
