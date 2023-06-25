@@ -53,6 +53,11 @@ ARCHITECTURE testbench_arch OF goertzel_tb IS
         to_100_char("sine_wave_200kHz_45deg.txt" & NUL),
         to_100_char("sine_wave_200kHz_90deg.txt" & NUL),
         to_100_char("sine_wave_200kHz_120deg.txt" & NUL),
+        to_100_char("sine_wave_combined_0deg.txt" & NUL),
+        to_100_char("sine_wave_combined_30deg.txt" & NUL),
+        to_100_char("sine_wave_combined_90deg.txt" & NUL),
+        to_100_char("sine_wave_combined_120deg.txt" & NUL),
+        to_100_char("sine_wave_combined_45deg.txt" & NUL),
         to_100_char("rectangular_wave_50kHz_0deg.txt" & NUL),
         to_100_char("rectangular_wave_50kHz_30deg.txt" & NUL),
         to_100_char("rectangular_wave_50kHz_45deg.txt" & NUL),
@@ -78,7 +83,7 @@ ARCHITECTURE testbench_arch OF goertzel_tb IS
     );
 
     CONSTANT SIG_LINE_BW : POSITIVE := 16; -- SIG_BW, rounded up to nearest multiple of 4
-    CONSTANT EXP_LINE_BW : POSITIVE := 32;
+    CONSTANT EXP_LINE_BW : POSITIVE := 20;
     CONSTANT CLK_T       : TIME     := 10 ns;
 
     SIGNAL clk     : STD_LOGIC := '0';
@@ -87,36 +92,36 @@ ARCHITECTURE testbench_arch OF goertzel_tb IS
     SIGNAL sigterm : STD_LOGIC := '0';
 
     -- for DUT
-    CONSTANT N            : POSITIVE                    := 100;
-    CONSTANT SIG_BW       : POSITIVE                    := 14;
-    CONSTANT INT_BW       : POSITIVE                    := 18;
-    CONSTANT LSB_TRUNCATE : POSITIVE                    := 5;
-    CONSTANT COEFF        : SIGNED(INT_BW - 1 DOWNTO 0) := "01" & x"E6F1";
-    CONSTANT COEFF_F      : POSITIVE                    := INT_BW - 2;
-    SIGNAL Sample_SI      : UNSIGNED(SIG_BW - 1 DOWNTO 0);
-    SIGNAL w0_SO          : SIGNED(INT_BW + LSB_TRUNCATE - 1 DOWNTO 0);
-    SIGNAL w1_SO          : SIGNED(INT_BW + LSB_TRUNCATE - 1 DOWNTO 0);
-    SIGNAL En_SI          : STD_LOGIC;
-    SIGNAL Done_SO        : STD_LOGIC;
+    CONSTANT N             : POSITIVE                    := 100;
+    CONSTANT SIG_BW        : POSITIVE                    := 14;
+    CONSTANT INT_BW        : POSITIVE                    := 18;
+    CONSTANT LSB_TRUNC     : POSITIVE                    := 5;
+    CONSTANT MAG_TRUNC     : POSITIVE                    := 11;
+    CONSTANT COEFF         : SIGNED(INT_BW - 1 DOWNTO 0) := "01" & x"E6F1";
+    CONSTANT COEFF_F       : POSITIVE                    := INT_BW - 2;
+    SIGNAL Sample_SI       : UNSIGNED(SIG_BW - 1 DOWNTO 0);
+    SIGNAL Magnitude_sq_SO : SIGNED(INT_BW - 1 DOWNTO 0);
+    SIGNAL En_SI           : STD_LOGIC;
+    SIGNAL Done_SO         : STD_LOGIC;
 
     -- File I/O
     FILE fptr : text;
 
     COMPONENT goertzel IS
         GENERIC (
-            N            : POSITIVE                    := 100; -- Number of samples
-            SIG_BW       : POSITIVE                    := 14;  -- bit width for input signal
-            INT_BW       : POSITIVE                    := 18;  -- bit width for internal data
-            LSB_TRUNCATE : POSITIVE                    := 5;   -- truncate internal data's LSB to avoid overflow
-            COEFF        : SIGNED(INT_BW - 1 DOWNTO 0) := "01" & x"E6F1";
-            COEFF_F      : POSITIVE                    := INT_BW - 2
+            N         : POSITIVE                    := 100;
+            SIG_BW    : POSITIVE                    := 14;
+            INT_BW    : POSITIVE                    := 18;
+            LSB_TRUNC : POSITIVE                    := 5;
+            MAG_TRUNC : POSITIVE                    := 11;
+            COEFF     : SIGNED(INT_BW - 1 DOWNTO 0) := "01" & x"E6F1";
+            COEFF_F   : POSITIVE                    := INT_BW - 2
         );
         PORT (
-            Clk_CI    : IN STD_LOGIC;
-            Rst_RBI   : IN STD_LOGIC;
-            Sample_SI : IN UNSIGNED(SIG_BW - 1 DOWNTO 0);
-            w0_SO     : OUT SIGNED(INT_BW + LSB_TRUNCATE - 1 DOWNTO 0);
-            w1_SO     : OUT SIGNED(INT_BW + LSB_TRUNCATE - 1 DOWNTO 0);
+            Clk_CI          : IN STD_LOGIC;
+            Rst_RBI         : IN STD_LOGIC;
+            Sample_SI       : IN UNSIGNED(SIG_BW - 1 DOWNTO 0);
+            Magnitude_sq_SO : OUT SIGNED(INT_BW - 1 DOWNTO 0);
 
             -- Controls
             -- enable, active high
@@ -180,7 +185,6 @@ BEGIN
             En_SI <= '0';
             WAIT UNTIL Done_SO = '1';
             REPORT "Test case " & INTEGER'IMAGE(i) & ": " & TEST_CASE(i);
-            -- REPORT "s: " & INTEGER'IMAGE(to_integer(w0_SO)) & " " & INTEGER'IMAGE(to_integer(w1_SO));
 
             -- open expected result file
             file_open(fstatus, fptr, EXPECTED_DIR & TEST_CASE(i), read_mode);
@@ -188,21 +192,11 @@ BEGIN
             WHILE (NOT endfile(fptr)) LOOP
                 readline(fptr, file_line);
                 hread(file_line, var_expected); -- hex
-                -- IF (resize(var_expected, w0_SO'LENGTH) = w0_SO) THEN
-                ASSERT (resize(var_expected, w0_SO'LENGTH) = w0_SO)
-                --     REPORT "PASS";
-                -- ELSE
-                REPORT "FAIL, Expected w0_SO: " & INTEGER'IMAGE(to_integer(resize(var_expected, w0_SO'LENGTH))) & " Actual: " & INTEGER'IMAGE(to_integer(w0_SO)) SEVERITY WARNING;
-                -- END IF;
 
-                readline(fptr, file_line);
-                hread(file_line, var_expected); -- hex
-                -- IF (resize(var_expected, w1_SO'LENGTH) = w1_SO) THEN
-                ASSERT (resize(var_expected, w1_SO'LENGTH) = w1_SO)
-                --     REPORT "PASS";
-                -- ELSE
-                REPORT "FAIL, Expected w1_SO: " & INTEGER'IMAGE(to_integer(resize(var_expected, w0_SO'LENGTH))) & " Actual: " & INTEGER'IMAGE(to_integer(w1_SO)) SEVERITY WARNING;
-                -- END IF;
+                -- ASSERT (resize(var_expected, Magnitude_sq_SO'LENGTH) /= Magnitude_sq_SO)
+                -- REPORT "PASS" SEVERITY NOTE;
+                ASSERT (resize(var_expected, Magnitude_sq_SO'LENGTH) = Magnitude_sq_SO)
+                REPORT "FAIL, Expected Magnitude_sq_SO: " & INTEGER'IMAGE(to_integer(var_expected)) & " Actual: " & INTEGER'IMAGE(to_integer(Magnitude_sq_SO)) SEVERITY WARNING;
             END LOOP;
 
             file_close(fptr);
@@ -210,7 +204,6 @@ BEGIN
         END LOOP;
 
         -- terminate
-
         WAIT UNTIL rising_edge(clk);
         eof     <= '1';
         sigterm <= '1';
@@ -219,21 +212,21 @@ BEGIN
 
     DUT : goertzel
     GENERIC MAP(
-        N            => N,
-        SIG_BW       => SIG_BW,
-        INT_BW       => INT_BW,
-        LSB_TRUNCATE => LSB_TRUNCATE,
-        COEFF        => COEFF,
-        COEFF_F      => COEFF_F
+        N         => N,
+        SIG_BW    => SIG_BW,
+        INT_BW    => INT_BW,
+        LSB_TRUNC => LSB_TRUNC,
+        MAG_TRUNC => MAG_TRUNC,
+        COEFF     => COEFF,
+        COEFF_F   => COEFF_F
     )
     PORT MAP(
 
-        Clk_CI    => clk,
-        Rst_RBI   => rst,
-        Sample_SI => Sample_SI,
-        w0_SO     => w0_SO,
-        w1_SO     => w1_SO,
-        En_SI     => En_SI,
-        Done_SO   => Done_SO
+        Clk_CI          => clk,
+        Rst_RBI         => rst,
+        Sample_SI       => Sample_SI,
+        Magnitude_sq_SO => Magnitude_sq_SO,
+        En_SI           => En_SI,
+        Done_SO         => Done_SO
     );
 END testbench_arch;

@@ -48,10 +48,6 @@ Never a bad idea to put an anime girl in the beginning of your README.
   * Reset: `Rst_CI`
   * Clock: `Clk_RBI`
 
-## To Do
-
-* <https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Binary_numeral_system_.28base_2.29>
-
 ## References
 
 * Dulik, T. (1999). An FPGA Implementation of Goertzel Algorithm. In: Lysaght, P., Irvine, J., Hartenstein, R. (eds) Field Programmable Logic and Applications. FPL 1999. Lecture Notes in Computer Science, vol 1673. Springer, Berlin, Heidelberg. <https://doi.org/10.1007/978-3-540-48302-1_35>
