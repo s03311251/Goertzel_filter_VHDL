@@ -82,14 +82,16 @@ ARCHITECTURE testbench_arch OF goertzel_tb IS
         to_100_char("triangle_wave_50kHz_90deg.txt" & NUL)
     );
 
+    -- for File I/O
     CONSTANT SIG_LINE_BW : POSITIVE := 16; -- SIG_BW, rounded up to nearest multiple of 4
     CONSTANT EXP_LINE_BW : POSITIVE := 20;
-    CONSTANT CLK_T       : TIME     := 10 ns;
 
-    SIGNAL clk     : STD_LOGIC := '0';
-    SIGNAL rst     : STD_LOGIC := '0';
-    SIGNAL eof     : STD_LOGIC := '0';
-    SIGNAL sigterm : STD_LOGIC := '0';
+    -- (clock period / 2) in simulation time
+    CONSTANT CLK_T : TIME := 10 ns;
+
+    -- for simulation
+    SIGNAL Eof     : STD_LOGIC := '0';
+    SIGNAL Sigterm : STD_LOGIC := '0';
 
     -- for DUT
     CONSTANT N             : POSITIVE                    := 100;
@@ -97,8 +99,10 @@ ARCHITECTURE testbench_arch OF goertzel_tb IS
     CONSTANT INT_BW        : POSITIVE                    := 18;
     CONSTANT LSB_TRUNC     : POSITIVE                    := 5;
     CONSTANT MAG_TRUNC     : POSITIVE                    := 11;
-    CONSTANT COEFF         : SIGNED(INT_BW - 1 DOWNTO 0) := "01" & x"E6F1";
-    CONSTANT COEFF_F       : POSITIVE                    := INT_BW - 2;
+    CONSTANT C             : SIGNED(INT_BW - 1 DOWNTO 0) := "01" & x"E6F1";
+    CONSTANT C_F           : POSITIVE                    := INT_BW - 2;
+    SIGNAL Clk_CI          : STD_LOGIC                   := '0';
+    SIGNAL Rst_RBI         : STD_LOGIC                   := '0';
     SIGNAL Sample_SI       : UNSIGNED(SIG_BW - 1 DOWNTO 0);
     SIGNAL Magnitude_sq_SO : SIGNED(INT_BW - 1 DOWNTO 0);
     SIGNAL En_SI           : STD_LOGIC;
@@ -114,20 +118,16 @@ ARCHITECTURE testbench_arch OF goertzel_tb IS
             INT_BW    : POSITIVE                    := 18;
             LSB_TRUNC : POSITIVE                    := 5;
             MAG_TRUNC : POSITIVE                    := 11;
-            COEFF     : SIGNED(INT_BW - 1 DOWNTO 0) := "01" & x"E6F1";
-            COEFF_F   : POSITIVE                    := INT_BW - 2
+            C         : SIGNED(INT_BW - 1 DOWNTO 0) := "01" & x"E6F1";
+            C_F       : POSITIVE                    := INT_BW - 2
         );
         PORT (
             Clk_CI          : IN STD_LOGIC;
             Rst_RBI         : IN STD_LOGIC;
             Sample_SI       : IN UNSIGNED(SIG_BW - 1 DOWNTO 0);
             Magnitude_sq_SO : OUT SIGNED(INT_BW - 1 DOWNTO 0);
-
-            -- Controls
-            -- enable, active high
-            En_SI : IN STD_LOGIC;
-            -- active high, keep high for 1 clk cycle when finished
-            Done_SO : OUT STD_LOGIC
+            En_SI           : IN STD_LOGIC;
+            Done_SO         : OUT STD_LOGIC
         );
     END COMPONENT;
 
@@ -137,15 +137,15 @@ BEGIN
     BEGIN
         clkloop : LOOP
             WAIT FOR CLK_T;
-            clk <= NOT clk;
-            IF sigterm = '1' THEN
+            Clk_CI <= NOT Clk_CI;
+            IF Sigterm = '1' THEN
                 EXIT;
             END IF;
         END LOOP clkloop;
         WAIT;
     END PROCESS;
 
-    rst <= '1', '0' AFTER 100 ns;
+    Rst_RBI <= '1', '0' AFTER 100 ns;
 
     GetData_proc : PROCESS
 
@@ -160,10 +160,10 @@ BEGIN
 
         var_data     := (OTHERS => '0');
         var_expected := (OTHERS => '0');
-        eof       <= '0';
+        Eof       <= '0';
         Sample_SI <= (OTHERS => '0');
         En_SI     <= '0';
-        WAIT UNTIL rst = '0';
+        WAIT UNTIL Rst_RBI = '0';
 
         -- open input signal files
 
@@ -172,7 +172,7 @@ BEGIN
             file_open(fstatus, fptr, INPUT_DIR & TEST_CASE(i), read_mode);
 
             WHILE (NOT endfile(fptr)) LOOP
-                WAIT UNTIL clk = '1';
+                WAIT UNTIL Clk_CI = '1';
                 En_SI <= '1';
                 readline(fptr, file_line);
                 hread(file_line, var_data); -- hex
@@ -204,9 +204,9 @@ BEGIN
         END LOOP;
 
         -- terminate
-        WAIT UNTIL rising_edge(clk);
-        eof     <= '1';
-        sigterm <= '1';
+        WAIT UNTIL rising_edge(Clk_CI);
+        Eof     <= '1';
+        Sigterm <= '1';
         WAIT;
     END PROCESS;
 
@@ -217,13 +217,13 @@ BEGIN
         INT_BW    => INT_BW,
         LSB_TRUNC => LSB_TRUNC,
         MAG_TRUNC => MAG_TRUNC,
-        COEFF     => COEFF,
-        COEFF_F   => COEFF_F
+        C         => C,
+        C_F       => C_F
     )
     PORT MAP(
 
-        Clk_CI          => clk,
-        Rst_RBI         => rst,
+        Clk_CI          => Clk_CI,
+        Rst_RBI         => Rst_RBI,
         Sample_SI       => Sample_SI,
         Magnitude_sq_SO => Magnitude_sq_SO,
         En_SI           => En_SI,

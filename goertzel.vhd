@@ -12,15 +12,14 @@ ENTITY goertzel IS
         LSB_TRUNC : POSITIVE := 5;   -- truncate internal data's LSB to avoid overflow
         MAG_TRUNC : POSITIVE := 11;  -- truncate final result (Magnitude_sq_SO)
 
-        -- Coefficient for multiplication with Prod_q_D = 2cos(2pi Fk/Fs)
+        -- Coefficient for multiplication with s0 = 2cos(2pi Fk/Fs)
         --
         -- Sampling frequency (Fs) = 1 MHz
         -- Target frequency (Fk) = 50 kHz
-        -- 2cos(2pi Fk/Fs) = 2 * cos (2pi * 50E3 / 1E6) = 1.90211303259031
+        -- 2cos(2pi m/N) = 2cos(2pi Fk/Fs) = 2 * cos (2pi * 50E3 / 1E6) = 1.90211303259031
         -- 1.90211303259031 -> rounded to 1.9021148681640625 = 0x1E6F1 * 2^-16
-        COEFF : SIGNED(INT_BW - 1 DOWNTO 0) := "01" & x"E6F1";
-        -- # of bits of fractional part of COEFF
-        COEFF_F : POSITIVE := INT_BW - 2
+        C : SIGNED(INT_BW - 1 DOWNTO 0) := "01" & x"E6F1";
+        C_F : POSITIVE := INT_BW - 2 -- # of bits of fractional part of C
     );
     PORT (
         Clk_CI  : IN STD_LOGIC;
@@ -60,32 +59,32 @@ ARCHITECTURE behavioural OF goertzel IS
     SIGNAL Cnt_D : UNSIGNED(clog2(N) - 1 DOWNTO 0) := (OTHERS => '0');
     -- state of the entity
     SIGNAL Active_D : STD_LOGIC := '0';
-    -- intermediate result, delayed (z^-1) Prod
-    SIGNAL Prod_debug : REAL;
 
-    SIGNAL w0, w1_D, w2_D : SIGNED(INT_BW - 1 DOWNTO 0);
-    -- Sample_SI + COEFF * w2_D - Prod_qq_D
+    -- intermediate result, delayed (z^-1) s0
+    SIGNAL s0, s1_D, s2_D : SIGNED(INT_BW - 1 DOWNTO 0);
+
+    -- Sum = Sample_SI + C * s2_D - s1_D
     SIGNAL Sum          : SIGNED(INT_BW + LSB_TRUNC - 1 DOWNTO 0);
     SIGNAL Magnitude_sq : SIGNED(INT_BW - 1 DOWNTO 0);
 
 BEGIN
     -- calculate the intermediate result
-    -- COEFF: (INT_BW - COEFF_F - 1 DOWNTO -COEFF_F) -> (1 DOWNTO -16)
-    -- Prod_q_D: (INT_BW + LSB_TRUNC - 1 DOWNTO LSB_TRUNC -> 22 DOWNTO 5)
-    -- product: ((INT_BW - COEFF_F - 1) + (INT_BW + LSB_TRUNC - 1)) DOWNTO -COEFF_F - (-LSB_TRUNC)) -> (23 DOWNTO -11)
-    -- take interger part -> shift Multi_prod right by 11 bits (COEFF_F - LSB_TRUNC)
+    -- C: (INT_BW - C_F - 1 DOWNTO -C_F) -> (1 DOWNTO -16)
+    -- s1_D: (INT_BW + LSB_TRUNC - 1 DOWNTO LSB_TRUNC -> 22 DOWNTO 5)
+    -- product: ((INT_BW - C_F - 1) + (INT_BW + LSB_TRUNC - 1)) DOWNTO -C_F - (-LSB_TRUNC)) -> (23 DOWNTO -11)
+    -- take interger part -> shift (C * s1_D) right by 11 bits (C_F - LSB_TRUNC)
     Sum <=
         resize(SIGNED('0' & Sample_SI), Sum'LENGTH) +
-        resize(shift_right(COEFF * w1_D, COEFF_F - LSB_TRUNC), Sum'LENGTH) -
-        shift_left(resize(w2_D, Sum'LENGTH), LSB_TRUNC);
-    w0 <= Sum(INT_BW + LSB_TRUNC - 1 DOWNTO LSB_TRUNC);
+        resize(shift_right(C * s1_D, C_F - LSB_TRUNC), Sum'LENGTH) -
+        shift_left(resize(s2_D, Sum'LENGTH), LSB_TRUNC);
+    s0 <= Sum(INT_BW + LSB_TRUNC - 1 DOWNTO LSB_TRUNC);
 
     -- results has been shifted by 2*LSB_TRUNC = 10 bits
-    -- MATLAB sim shows that the results take at most 38 bits, hence truncate additional 10 bits to fit into INT_BW (18 bits)
+    -- MATLAB sim shows that the results take at most 38 bits, hence truncate additional 11 bits (MAG_TRUNC) to fit into INT_BW (18 bits)
     Magnitude_sq <= resize(shift_right(
-        w1_D * w1_D +
-        w2_D * w2_D -
-        shift_right(w1_D * w2_D * COEFF, COEFF_F),
+        s1_D * s1_D +
+        s2_D * s2_D -
+        shift_right(s1_D * s2_D * C, C_F),
         MAG_TRUNC), Magnitude_sq'LENGTH);
 
     PROCESS (Clk_CI)
@@ -96,8 +95,8 @@ BEGIN
             IF Rst_RBI = '1' THEN
                 Cnt_D    <= (OTHERS => '0');
                 Active_D <= '0';
-                w1_D     <= (OTHERS => '0');
-                w2_D     <= (OTHERS => '0');
+                s1_D     <= (OTHERS => '0');
+                s2_D     <= (OTHERS => '0');
                 Done_SO  <= '0';
             ELSE
                 Active_V := Active_D;
@@ -112,18 +111,18 @@ BEGIN
 
                 -- store intermediate result
                 IF (Active_V = '1') THEN
-                    w1_D <= w0;
-                    w2_D <= w1_D;
+                    s1_D <= s0;
+                    s2_D <= s1_D;
                 ELSE
-                    w1_D <= (OTHERS => '0');
-                    w2_D <= (OTHERS => '0');
+                    s1_D <= (OTHERS => '0');
+                    s2_D <= (OTHERS => '0');
                 END IF;
 
                 -- calculation finished
                 -- N - 1 because:
                 -- index of Cnt_D starts from 0 -> -1
                 -- Cnt_D starts counting 2 clk cycles after 1st sample arrives -> -2
-                -- test bench is fetching Prod_SO 1 clk cycle before -> +1
+                -- test bench is fetching output 1 clk cycle before -> +1
                 -- output to FF -> +1
                 IF (Active_V = '1' AND Cnt_D = to_unsigned(N - 1, Cnt_D'LENGTH)) THEN
                     Active_V := '0';

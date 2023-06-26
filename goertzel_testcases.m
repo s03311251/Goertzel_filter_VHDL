@@ -2,7 +2,7 @@
 
 % 1. Define constants
 Fs = 1e6; % sampling frequency
-F_detect = 50e3; % frequency to detect
+Fk = 50e3; % frequency to detect
 N = 100; % number of samples
 INPUT_BIT_LEN = 14; % number of input bit length
 INPUT_SWING = 14; % swing of input signal
@@ -142,11 +142,11 @@ end
 sine_waves_dft = zeros(length(frequencies_sine), length(phase_angles), "int32");
 for i = 1:length(frequencies_sine)
     for j = 1:length(phase_angles)
-        % freq_indices = round(F_detect/Fs*N) + 1;
+        % freq_indices = round(Fk/Fs*N) + 1;
         % % transform to single precision because goertzel only accepts single
         % dft_data = goertzel(single(sine_waves(i, j, :)),freq_indices);
         dft_input = reshape(sine_waves(i, j, :), 1, []);
-        magnitude_sq = goertzel_filter(dft_input, F_detect, Fs, COEFF_BW, LSB_TRUNC, MAG_TRUNC);
+        magnitude_sq = goertzel_filter(dft_input, Fk, Fs, COEFF_BW, LSB_TRUNC, MAG_TRUNC);
         sine_waves_dft(i, j) = magnitude_sq;
         % fprintf("freq: %d phase: %d magnitude: %d\n", i, j, abs(dft_data));
         fprintf("SIN freq: %d phase: %d s: %d %d\n", frequencies_sine(i), phase_angles(j), s, s_prev);
@@ -154,20 +154,20 @@ for i = 1:length(frequencies_sine)
 end
 
 % figure; % open a new figure window
-% stem(F_detect,abs(dft_data))
+% stem(Fk,abs(dft_data))
 
 % % Adjusting subplot spacing
 % sgtitle('Waveform Plots');
 
 % ax = gca;
-% ax.XTick = F_detect;
+% ax.XTick = Fk;
 % xlabel('Frequency (Hz)')
 % ylabel('DFT Magnitude')
 
 sine_waves_combined_dft = zeros(length(phase_angles), 1, "int32");
 for i = 1:length(phase_angles)
     dft_input = reshape(sine_waves_combined(i, :), 1, []);
-    magnitude_sq = goertzel_filter(dft_input, F_detect, Fs, COEFF_BW, LSB_TRUNC, MAG_TRUNC);
+    magnitude_sq = goertzel_filter(dft_input, Fk, Fs, COEFF_BW, LSB_TRUNC, MAG_TRUNC);
     sine_waves_combined_dft(i) = magnitude_sq;
     fprintf("SIN_COMB phase: %d s: %d %d\n", phase_angles(i), s, s_prev);
 end
@@ -176,7 +176,7 @@ rectangular_waves_dft = zeros(length(frequencies_rectangular), length(phase_angl
 for i = 1:length(frequencies_rectangular)
     for j = 1:length(phase_angles)
         dft_input = reshape(rectangular_waves(i, j, :), 1, []);
-        magnitude_sq = goertzel_filter(dft_input, F_detect, Fs, COEFF_BW, LSB_TRUNC, MAG_TRUNC);
+        magnitude_sq = goertzel_filter(dft_input, Fk, Fs, COEFF_BW, LSB_TRUNC, MAG_TRUNC);
         rectangular_waves_dft(i, j) = magnitude_sq;
         fprintf("RECT freq: %d phase: %d s: %d %d\n", frequencies_rectangular(i), phase_angles(j), s, s_prev);
     end
@@ -185,7 +185,7 @@ end
 triangle_waves_dft = zeros(length(phase_angles_triangle), 1, "int32");
 for i = 1:length(phase_angles_triangle)
     dft_input = reshape(triangle_waves(i, :), 1, []);
-    magnitude_sq = goertzel_filter(dft_input, F_detect, Fs, COEFF_BW, LSB_TRUNC, MAG_TRUNC);
+    magnitude_sq = goertzel_filter(dft_input, Fk, Fs, COEFF_BW, LSB_TRUNC, MAG_TRUNC);
     triangle_waves_dft(i) = magnitude_sq;
     fprintf("TRI phase: %d s: %d %d\n", phase_angles_triangle(i), s, s_prev);
 end
