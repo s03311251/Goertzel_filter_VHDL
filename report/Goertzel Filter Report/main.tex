@@ -1,0 +1,87 @@
+\documentclass[10pt]{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{subcaption} % for sub-images (e.g. side-by-side)
+\usepackage{float} % for image alignment
+\usepackage{natbib}
+\usepackage{amsmath} % for numbered equations
+\usepackage[hidelinks]{hyperref}
+\usepackage{url} % for URL
+\usepackage{multirow} % for table
+% \usepackage{multicol} % for double column
+
+% for Syntax Highlight
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+language=Java,
+aboveskip=3mm,
+belowskip=3mm,
+showstringspaces=false,
+columns=flexible,
+basicstyle={\scriptsize\ttfamily},
+numbers=none,
+numberstyle=\tiny\color{gray},
+keywordstyle=\color{blue},
+commentstyle=\color{dkgreen},
+stringstyle=\color{mauve},
+breaklines=true,
+breakatwhitespace=true,
+tabsize=3
+}
+
+% for circuit diagram
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,calc,arrows.meta}
+\usepackage{amsmath,bm,times}
+\newcommand{\mx}[1]{\mathbf{\bm{#1}}} % Matrix command
+\newcommand{\vc}[1]{\mathbf{\bm{#1}}} % Vector command
+
+% for bar charts
+\usepackage{pgfplots}
+
+\pgfplotsset{
+/pgfplots/my legend/.style={
+legend image code/.code={
+\draw[thick,black](-0.05cm,0cm) -- (0.3cm,0cm);%
+   }
+  }
+}
+\pgfplotsset{compat=1.18}
+
+% Redefine \bibname to remove the default "References" title
+\renewcommand{\bibname}{}
+
+\title{Goertzel Filter Report}
+\author{Man Chui Ng, Luca Brodo, Tural Hasanov}
+
+\begin{document}
+\usetikzlibrary{fit}
+\maketitle
+
+% \begin{multicols}{2}
+\input{src/01_intro_scope}
+\input{src/02_theory}
+\input{src/04_literature_review}
+\input{src/03_pc}
+\input{src/06_simu}
+\input{src/05_algo}
+
+\input{src/07_conclusion}
+% \end{multicols}
+
+%\section{References}
+\bibliographystyle{unsrt}
+\bibliography{bib} 
+
+\input{src/99_appendix}
+
+\end{document}
+
+
+
+

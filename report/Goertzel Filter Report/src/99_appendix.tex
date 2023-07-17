@@ -1,0 +1,761 @@
+\newpage
+\section{Appendix}
+\appendix
+\section{Results of Goertzel Filter simulation in MATLAB}
+\pagenumbering{roman}
+%\renewcommand{\thesection}{\Roman{section}}
+\begin{table}[H]
+  \begin{tabular}{|c c||c|c|c|}
+    \hline
+    \multicolumn{2}{|c||}{\bf Input signal} & \multirow{2}*{\bf Floating-point} & \multirow{2}*{\bf Integer} & \multirow{2}*{\bf Difference}             \\
+    \textbf{Frequency (kHz)}                & \textbf{Phase (°)}                &                            &                               &           \\
+    \hline
+    \multicolumn{5}{|c|}{\bf Sine wave}                                                                                                                  \\
+    \hline
+    \multirow{5}*{5}                        & 0                                 & 28165288                   & 27262976                      & 902312    \\
+                                            & 30                                & 682813699                  & 679477248                     & 3336451   \\
+                                            & 45                                & 1368984191                 & 1365245952                    & 3738239   \\
+                                            & 90                                & 2796749553                 & 2791309312                    & 5440241   \\
+                                            & 120                               & 2142148654                 & 2139095040                    & 3053614   \\
+    \hline
+    \multirow{5}*{49}                       & 0                                 & 164300582087               & 164186030080                  & 114552007 \\
+                                            & 30                                & 165638701140               & 165589024768                  & 49676372  \\
+                                            & 45                                & 165006710536               & 165033279488                  & -26568952 \\
+                                            & 90                                & 160349176237               & 160327270400                  & 21905837  \\
+                                            & 120                               & 159011970308               & 159020744704                  & -8774396  \\
+    \hline
+    \multirow{5}*{50}                       & 0                                 & 167754581071               & 167786840064                  & -32258993 \\
+                                            & 30                                & 167757951221               & 167845560320                  & -87609099 \\
+                                            & 45                                & 167745947887               & 167784742912                  & -38795025 \\
+                                            & 90                                & 167748444133               & 167723925504                  & 24518629  \\
+                                            & 120                               & 167756010813               & 167832977408                  & -76966595 \\
+    \hline
+    \multirow{5}*{51}                       & 0                                 & 159204915664               & 159184322560                  & 20593104  \\
+                                            & 30                                & 161622013902               & 161633796096                  & -11782194 \\
+                                            & 45                                & 163313161637               & 163238117376                  & 75044261  \\
+                                            & 90                                & 165437419087               & 165435932672                  & 1486415   \\
+                                            & 120                               & 163022198679               & 163108093952                  & -85895273 \\
+    \hline
+    \multirow{5}*{200}                      & 0                                 & 19                         & 0                             & 19        \\
+                                            & 30                                & 6                          & 0                             & 6         \\
+                                            & 45                                & 14                         & 0                             & 14        \\
+                                            & 90                                & 19                         & 0                             & 19        \\
+                                            & 120                               & 29                         & 0                             & 29        \\
+    \hline
+    \multirow{5}*{combined}                 & 0                                 & 55316152356                & 55293509632                   & 22642724  \\
+                                            & 30                                & 57679231120                & 57680068608                   & -837488   \\
+                                            & 45                                & 58261386167                & 58294534144                   & -33147977 \\
+                                            & 90                                & 56341860579                & 56329502720                   & 12357859  \\
+                                            & 120                               & 53976111895                & 53953429504                   & 22682391  \\
+    \hline
+  \end{tabular}
+\end{table}
+
+\begin{table}[H]
+  \begin{tabular}{|c c||c|c|c|}
+    \hline
+    \multicolumn{2}{|c||}{\bf Input signal} & \multirow{2}*{\bf Floating-point} & \multirow{2}*{\bf Integer} & \multirow{2}*{\bf Difference}             \\
+    \textbf{Frequency (kHz)}                & \textbf{Phase (°)}                &                            &                               &           \\
+    \hline
+    \multicolumn{5}{|c|}{\bf Rectangular wave}                                                                                                           \\
+    \hline
+    \multirow{5}*{10}                       & 0                                 & 10967862060                & 10951327744                   & 16534316  \\
+                                            & 30                                & 10967862060                & 10984882176                   & -17020116 \\
+                                            & 45                                & 10967862060                & 10974396416                   & -6534356  \\
+                                            & 90                                & 10967862060                & 10982785024                   & -14922964 \\
+                                            & 120                               & 10967862060                & 10970202112                   & -2340052  \\
+    \hline
+    \multirow{5}*{16}                       & 0                                 & 35190107208                & 35108421632                   & 81685576  \\
+                                            & 30                                & 38711007665                & 38669385728                   & 41621937  \\
+                                            & 45                                & 25835512141                & 25813843968                   & 21668173  \\
+                                            & 90                                & 13709827575                & 13719568384                   & -9740809  \\
+                                            & 120                               & 38711007665                & 38646317056                   & 64690609  \\
+    \hline
+    \multirow{5}*{50}                       & 0                                 & 271780927294               & 271730081792                  & 50845502  \\
+                                            & 30                                & 274196551495               & 274141806592                  & 54744903  \\
+                                            & 45                                & 274196551495               & 274080989184                  & 115562311 \\
+                                            & 90                                & 269902108471               & 269859422208                  & 42686263  \\
+                                            & 120                               & 274196551495               & 274141806592                  & 54744903  \\
+    \hline
+    \multirow{5}*{200}                      & 0                                 & 268402689                  & 266338304                     & 2064385   \\
+                                            & 30                                & 0                          & 0                             & 0         \\
+                                            & 45                                & 0                          & 0                             & 0         \\
+                                            & 90                                & 0                          & 0                             & 0         \\
+                                            & 120                               & 0                          & 0                             & 0         \\
+    \hline
+    \multirow{5}*{combined}                 & 0                                 & 39636235246                & 39696990208                   & -60754962 \\
+                                            & 30                                & 27759917661                & 27736932352                   & 22985309  \\
+                                            & 45                                & 19477158285                & 19480444928                   & -3286643  \\
+                                            & 90                                & 16577256943                & 16571695104                   & 5561839   \\
+                                            & 120                               & 6703613435                 & 6696206336                    & 7407099   \\
+    \hline
+    \multicolumn{5}{|c|}{\bf Triangle wave}                                                                                                              \\
+    \hline
+    \multirow{2}*{50}                       & 0                                 & 112045721003               & 112042442752                  & 3278251   \\
+                                            & 90                                & 112045721002               & 112059219968                  & -13498966 \\
+    \hline
+    % \caption{TEST}
+    % \label{tab:goertzel_results}
+  \end{tabular}
+  \caption{\label{tab:result} Results of Goertzel Filter simulation in MATLAB}
+\end{table}
+\newpage
+\section{Code of Goertzel Filter implementation in VHDL}
+
+\lstset{language=VHDL}
+\begin{lstlisting}
+
+LIBRARY IEEE;
+USE IEEE.STD_LOGIC_1164.ALL;
+USE IEEE.NUMERIC_STD.ALL;
+-- for constant calculation only (using clog2()), still synthesizable
+USE IEEE.MATH_REAL.ALL;
+
+ENTITY goertzel IS
+    GENERIC (
+        N         : POSITIVE := 100; -- Number of samples
+        SIG_BW    : POSITIVE := 14;  -- bit width for input signal
+        INT_BW    : POSITIVE := 18;  -- bit width for internal data
+        LSB_TRUNC : POSITIVE := 5;   -- truncate internal data's LSB to avoid overflow
+        MAG_TRUNC : POSITIVE := 11;  -- truncate final result (Magnitude_sq_SO)
+
+        -- Coefficient for multiplication with s0 = 2cos(2pi Fk/Fs)
+        --
+        -- Sampling frequency (Fs) = 1 MHz
+        -- Target frequency (Fk) = 50 kHz
+        -- 2cos(2pi m/N) = 2cos(2pi Fk/Fs) = 2 * cos (2pi * 50E3 / 1E6) = 1.90211303259031
+        -- 1.90211303259031 -> rounded to 1.9021148681640625 = 0x1E6F1 * 2^-16
+        C : SIGNED(INT_BW - 1 DOWNTO 0) := "01" & x"E6F1";
+        C_F : POSITIVE := INT_BW - 2 -- # of bits of fractional part of C
+    );
+    PORT (
+        Clk_CI  : IN STD_LOGIC;
+        Rst_RBI : IN STD_LOGIC;
+
+        -- Signals
+        -- offset binary numbers
+        -- 1st sample should arrive the same clk cycle as the rising edge of En_SI
+        Sample_SI : IN UNSIGNED(SIG_BW - 1 DOWNTO 0);
+
+        -- output in terms of (magnitude^2 / 2^21)
+        -- (maximum value of magnitude^2 is between 2^37 to 2^38)
+        Magnitude_sq_SO : OUT SIGNED(INT_BW - 1 DOWNTO 0);
+
+        -- Controls
+        -- enable, active high
+        En_SI : IN STD_LOGIC;
+        -- active high, keep high for 1 clk cycle when finished
+        Done_SO : OUT STD_LOGIC
+    );
+END ENTITY goertzel;
+
+ARCHITECTURE behavioural OF goertzel IS
+
+    -- for bit width calculation
+    FUNCTION clog2(
+        num : IN POSITIVE
+    )
+        RETURN POSITIVE IS
+        VARIABLE num_in_log2 : POSITIVE;
+    BEGIN
+        num_in_log2 := POSITIVE(ceil(log2(REAL(num))));
+        RETURN num_in_log2;
+    END FUNCTION clog2;
+
+    -- to count when the process finishes
+    SIGNAL Cnt_D : UNSIGNED(clog2(N) - 1 DOWNTO 0) := (OTHERS => '0');
+    -- state of the entity
+    SIGNAL Active_D : STD_LOGIC := '0';
+
+    -- intermediate result, delayed (z^-1) s0
+    SIGNAL s0, s1_D, s2_D : SIGNED(INT_BW - 1 DOWNTO 0);
+
+    -- Sum = Sample_SI + C * s2_D - s1_D
+    SIGNAL Sum          : SIGNED(INT_BW + LSB_TRUNC - 1 DOWNTO 0);
+    SIGNAL Magnitude_sq : SIGNED(INT_BW - 1 DOWNTO 0);
+
+BEGIN
+    -- calculate the intermediate result
+    -- C: (INT_BW - C_F - 1 DOWNTO -C_F) -> (1 DOWNTO -16)
+    -- s1_D: (INT_BW + LSB_TRUNC - 1 DOWNTO LSB_TRUNC -> 22 DOWNTO 5)
+    -- product: ((INT_BW - C_F - 1) + (INT_BW + LSB_TRUNC - 1)) DOWNTO -C_F - (-LSB_TRUNC)) -> (23 DOWNTO -11)
+    -- take interger part -> shift (C * s1_D) right by 11 bits (C_F - LSB_TRUNC)
+    Sum <=
+        resize(SIGNED('0' & Sample_SI), Sum'LENGTH) +
+        resize(shift_right(C * s1_D, C_F - LSB_TRUNC), Sum'LENGTH) -
+        shift_left(resize(s2_D, Sum'LENGTH), LSB_TRUNC);
+    s0 <= Sum(INT_BW + LSB_TRUNC - 1 DOWNTO LSB_TRUNC);
+
+    -- results has been shifted by 2*LSB_TRUNC = 10 bits
+    -- MATLAB sim shows that the results take at most 38 bits, hence truncate additional 11 bits (MAG_TRUNC) to fit into INT_BW (18 bits)
+    Magnitude_sq <= resize(shift_right(
+        s1_D * s1_D +
+        s2_D * s2_D -
+        shift_right(s1_D * s2_D * C, C_F),
+        MAG_TRUNC), Magnitude_sq'LENGTH);
+
+    PROCESS (Clk_CI)
+        VARIABLE Active_V : STD_LOGIC;
+    BEGIN
+        IF rising_edge(Clk_CI) THEN
+            IF Rst_RBI = '1' THEN
+                Cnt_D    <= (OTHERS => '0');
+                Active_D <= '0';
+                s1_D     <= (OTHERS => '0');
+                s2_D     <= (OTHERS => '0');
+                Done_SO  <= '0';
+            ELSE
+                Active_V := Active_D;
+                Done_SO <= '0';
+                Cnt_D   <= Cnt_D + 1;
+
+                -- calculated starts
+                IF (Active_V = '0' AND En_SI = '1') THEN
+                    Active_V := '1';
+                    Cnt_D <= (OTHERS => '0');
+                END IF;
+
+                -- store intermediate result
+                IF (Active_V = '1') THEN
+                    s1_D <= s0;
+                    s2_D <= s1_D;
+                ELSE
+                    s1_D <= (OTHERS => '0');
+                    s2_D <= (OTHERS => '0');
+                END IF;
+
+                -- check if calculation is finished
+                -- N - 1 because:
+                -- index of Cnt_D starts from 0 -> -1
+                -- Cnt_D starts counting 2 clk cycles after 1st sample arrives -> -2
+                -- downstream is fetching output 1 clk cycle before -> +1
+                -- output to FF -> +1
+                IF (Active_V = '1' AND Cnt_D = to_unsigned(N - 1, Cnt_D'LENGTH)) THEN
+                    Active_V := '0';
+                    Done_SO <= '1';
+                END IF;
+
+                Active_D <= Active_V;
+            END IF;
+
+            -- output to FF for better timing
+            -- reset is unnecessary, as the output is guard by Done_SO, also save routing resource
+            Magnitude_sq_SO <= Magnitude_sq;
+        END IF;
+    END PROCESS;
+END behavioural;
+\end{lstlisting}
+
+\section{Code of VHDL testbench}
+
+\lstset{language=VHDL}
+\begin{lstlisting}
+LIBRARY IEEE;
+USE IEEE.STD_LOGIC_1164.ALL;
+USE IEEE.NUMERIC_STD.ALL;
+-- USE IEEE.MATH_REAL.ALL;
+USE STD.TEXTIO.ALL;
+
+ENTITY goertzel_tb IS
+END goertzel_tb;
+
+ARCHITECTURE testbench_arch OF goertzel_tb IS
+    FUNCTION to_100_char(string_in : STRING) RETURN STRING IS
+        VARIABLE V                     : STRING(1 TO 100) := (OTHERS => ' ');
+    BEGIN
+        IF string_in'length > 100 THEN
+            RETURN string_in(1 TO 100);
+        ELSE
+            V(1 TO string_in'length) := string_in;
+            RETURN V;
+        END IF;
+    END to_100_char;
+
+    TYPE STRING_LIST IS ARRAY (NATURAL RANGE <>) OF STRING(1 TO 100);
+
+    CONSTANT INPUT_DIR    : STRING      := "test_cases/input/";
+    CONSTANT EXPECTED_DIR : STRING      := "test_cases/expected/";
+    CONSTANT TEST_CASE    : STRING_LIST := (
+        to_100_char("sine_wave_50kHz_0deg.txt" & NUL),
+        to_100_char("sine_wave_50kHz_30deg.txt" & NUL),
+        to_100_char("sine_wave_50kHz_45deg.txt" & NUL),
+        to_100_char("sine_wave_50kHz_90deg.txt" & NUL),
+        to_100_char("sine_wave_50kHz_120deg.txt" & NUL),
+        to_100_char("sine_wave_49kHz_0deg.txt" & NUL),
+        to_100_char("sine_wave_49kHz_30deg.txt" & NUL),
+        to_100_char("sine_wave_49kHz_45deg.txt" & NUL),
+        to_100_char("sine_wave_49kHz_90deg.txt" & NUL),
+        to_100_char("sine_wave_49kHz_120deg.txt" & NUL),
+        to_100_char("sine_wave_51kHz_0deg.txt" & NUL),
+        to_100_char("sine_wave_51kHz_30deg.txt" & NUL),
+        to_100_char("sine_wave_51kHz_45deg.txt" & NUL),
+        to_100_char("sine_wave_51kHz_90deg.txt" & NUL),
+        to_100_char("sine_wave_51kHz_120deg.txt" & NUL),
+        to_100_char("sine_wave_5kHz_0deg.txt" & NUL),
+        to_100_char("sine_wave_5kHz_30deg.txt" & NUL),
+        to_100_char("sine_wave_5kHz_45deg.txt" & NUL),
+        to_100_char("sine_wave_5kHz_90deg.txt" & NUL),
+        to_100_char("sine_wave_5kHz_120deg.txt" & NUL),
+        to_100_char("sine_wave_200kHz_0deg.txt" & NUL),
+        to_100_char("sine_wave_200kHz_30deg.txt" & NUL),
+        to_100_char("sine_wave_200kHz_45deg.txt" & NUL),
+        to_100_char("sine_wave_200kHz_90deg.txt" & NUL),
+        to_100_char("sine_wave_200kHz_120deg.txt" & NUL),
+        to_100_char("sine_wave_combined_0deg.txt" & NUL),
+        to_100_char("sine_wave_combined_30deg.txt" & NUL),
+        to_100_char("sine_wave_combined_90deg.txt" & NUL),
+        to_100_char("sine_wave_combined_120deg.txt" & NUL),
+        to_100_char("sine_wave_combined_45deg.txt" & NUL),
+        to_100_char("rectangular_wave_50kHz_0deg.txt" & NUL),
+        to_100_char("rectangular_wave_50kHz_30deg.txt" & NUL),
+        to_100_char("rectangular_wave_50kHz_45deg.txt" & NUL),
+        to_100_char("rectangular_wave_50kHz_90deg.txt" & NUL),
+        to_100_char("rectangular_wave_50kHz_120deg.txt" & NUL),
+        to_100_char("rectangular_wave_16kHz_0deg.txt" & NUL),
+        to_100_char("rectangular_wave_16kHz_30deg.txt" & NUL),
+        to_100_char("rectangular_wave_16kHz_45deg.txt" & NUL),
+        to_100_char("rectangular_wave_16kHz_90deg.txt" & NUL),
+        to_100_char("rectangular_wave_16kHz_120deg.txt" & NUL),
+        to_100_char("rectangular_wave_10kHz_0deg.txt" & NUL),
+        to_100_char("rectangular_wave_10kHz_30deg.txt" & NUL),
+        to_100_char("rectangular_wave_10kHz_45deg.txt" & NUL),
+        to_100_char("rectangular_wave_10kHz_90deg.txt" & NUL),
+        to_100_char("rectangular_wave_10kHz_120deg.txt" & NUL),
+        to_100_char("rectangular_wave_200kHz_0deg.txt" & NUL),
+        to_100_char("rectangular_wave_200kHz_30deg.txt" & NUL),
+        to_100_char("rectangular_wave_200kHz_45deg.txt" & NUL),
+        to_100_char("rectangular_wave_200kHz_90deg.txt" & NUL),
+        to_100_char("rectangular_wave_200kHz_120deg.txt" & NUL),
+        to_100_char("rectangular_wave_combined_0deg.txt" & NUL),
+        to_100_char("rectangular_wave_combined_30deg.txt" & NUL),
+        to_100_char("rectangular_wave_combined_45deg.txt" & NUL),
+        to_100_char("rectangular_wave_combined_90deg.txt" & NUL),
+        to_100_char("rectangular_wave_combined_120deg.txt" & NUL),
+        to_100_char("triangle_wave_50kHz_0deg.txt" & NUL),
+        to_100_char("triangle_wave_50kHz_90deg.txt" & NUL)
+    );
+
+    -- for File I/O
+    CONSTANT SIG_LINE_BW : POSITIVE := 16; -- SIG_BW, rounded up to nearest multiple of 4
+    CONSTANT EXP_LINE_BW : POSITIVE := 20;
+
+    -- (clock period / 2) in simulation time
+    CONSTANT CLK_T : TIME := 10 ns;
+
+    -- for simulation
+    SIGNAL Eof     : STD_LOGIC := '0';
+    SIGNAL Sigterm : STD_LOGIC := '0';
+
+    -- for DUT
+    CONSTANT N             : POSITIVE                    := 100;
+    CONSTANT SIG_BW        : POSITIVE                    := 14;
+    CONSTANT INT_BW        : POSITIVE                    := 18;
+    CONSTANT LSB_TRUNC     : POSITIVE                    := 5;
+    CONSTANT MAG_TRUNC     : POSITIVE                    := 11;
+    CONSTANT C             : SIGNED(INT_BW - 1 DOWNTO 0) := "01" & x"E6F1";
+    CONSTANT C_F           : POSITIVE                    := INT_BW - 2;
+    SIGNAL Clk_CI          : STD_LOGIC                   := '0';
+    SIGNAL Rst_RBI         : STD_LOGIC                   := '0';
+    SIGNAL Sample_SI       : UNSIGNED(SIG_BW - 1 DOWNTO 0);
+    SIGNAL Magnitude_sq_SO : SIGNED(INT_BW - 1 DOWNTO 0);
+    SIGNAL En_SI           : STD_LOGIC;
+    SIGNAL Done_SO         : STD_LOGIC;
+
+    -- File I/O
+    FILE fptr : text;
+
+    COMPONENT goertzel IS
+        GENERIC (
+            N         : POSITIVE                    := 100;
+            SIG_BW    : POSITIVE                    := 14;
+            INT_BW    : POSITIVE                    := 18;
+            LSB_TRUNC : POSITIVE                    := 5;
+            MAG_TRUNC : POSITIVE                    := 11;
+            C         : SIGNED(INT_BW - 1 DOWNTO 0) := "01" & x"E6F1";
+            C_F       : POSITIVE                    := INT_BW - 2
+        );
+        PORT (
+            Clk_CI          : IN STD_LOGIC;
+            Rst_RBI         : IN STD_LOGIC;
+            Sample_SI       : IN UNSIGNED(SIG_BW - 1 DOWNTO 0);
+            Magnitude_sq_SO : OUT SIGNED(INT_BW - 1 DOWNTO 0);
+            En_SI           : IN STD_LOGIC;
+            Done_SO         : OUT STD_LOGIC
+        );
+    END COMPONENT;
+
+BEGIN
+
+    ClockGenerator : PROCESS
+    BEGIN
+        clkloop : LOOP
+            WAIT FOR CLK_T;
+            Clk_CI <= NOT Clk_CI;
+            IF Sigterm = '1' THEN
+                EXIT;
+            END IF;
+        END LOOP clkloop;
+        WAIT;
+    END PROCESS;
+
+    Rst_RBI <= '1', '0' AFTER 100 ns;
+
+    GetData_proc : PROCESS
+
+        VARIABLE fstatus : file_open_status;
+
+        VARIABLE file_line    : line;
+        VARIABLE var_data     : UNSIGNED(SIG_LINE_BW - 1 DOWNTO 0);
+        VARIABLE var_expected : SIGNED(EXP_LINE_BW - 1 DOWNTO 0);
+    BEGIN
+
+        -- initialize
+
+        var_data     := (OTHERS => '0');
+        var_expected := (OTHERS => '0');
+        Eof       <= '0';
+        Sample_SI <= (OTHERS => '0');
+        En_SI     <= '0';
+        WAIT UNTIL Rst_RBI = '0';
+
+        FOR i IN TEST_CASE'RANGE LOOP
+            -- open input signal file
+            file_open(fstatus, fptr, INPUT_DIR & TEST_CASE(i), read_mode);
+
+            WHILE (NOT endfile(fptr)) LOOP
+                WAIT UNTIL Clk_CI = '1';
+                En_SI <= '1';
+                readline(fptr, file_line);
+                hread(file_line, var_data); -- hex
+                Sample_SI <= resize(var_data, Sample_SI'LENGTH);
+            END LOOP;
+
+            file_close(fptr);
+
+            -- wait for DUT to finish
+            En_SI <= '0';
+            WAIT UNTIL Done_SO = '1';
+            REPORT "Test case " & INTEGER'IMAGE(i) & ": " & TEST_CASE(i);
+
+            -- open expected result file
+            file_open(fstatus, fptr, EXPECTED_DIR & TEST_CASE(i), read_mode);
+            readline(fptr, file_line);
+            hread(file_line, var_expected); -- hex
+
+            ASSERT (resize(var_expected, Magnitude_sq_SO'LENGTH) = Magnitude_sq_SO)
+            REPORT "FAIL, Expected Magnitude_sq_SO: " & INTEGER'IMAGE(to_integer(var_expected)) & " Actual: " & INTEGER'IMAGE(to_integer(Magnitude_sq_SO)) SEVERITY WARNING;
+
+            file_close(fptr);
+        END LOOP;
+
+        -- terminate
+        WAIT UNTIL rising_edge(Clk_CI);
+        Eof     <= '1';
+        Sigterm <= '1';
+        WAIT;
+    END PROCESS;
+
+    DUT : goertzel
+    GENERIC MAP(
+        N         => N,
+        SIG_BW    => SIG_BW,
+        INT_BW    => INT_BW,
+        LSB_TRUNC => LSB_TRUNC,
+        MAG_TRUNC => MAG_TRUNC,
+        C         => C,
+        C_F       => C_F
+    )
+    PORT MAP(
+
+        Clk_CI          => Clk_CI,
+        Rst_RBI         => Rst_RBI,
+        Sample_SI       => Sample_SI,
+        Magnitude_sq_SO => Magnitude_sq_SO,
+        En_SI           => En_SI,
+        Done_SO         => Done_SO
+    );
+END testbench_arch;
+
+\end{lstlisting}
+
+\section{Code of MATLAB simulation}
+
+\lstset{language=Matlab}
+\begin{lstlisting}
+% 1. Define constants
+Fs = 1e6; % sampling frequency
+Fk = 50e3; % frequency to detect
+N = 100; % number of samples
+INPUT_BIT_LEN = 14; % number of input bit length
+INPUT_SWING = 14; % swing of input signal
+INT_BIT_LEN = 18; % number of internal bit length
+
+% VHDL impelmentation related
+% bit width of COEFF due to internal data bit width limitation
+% 18 - 2 = 16 bits for fractional part
+COEFF_BW = INT_BIT_LEN - 2;
+LSB_TRUNC = 5; % internal data's LSB truncated, as implemented in VHDL
+MAG_TRUNC = 11; % truncate final result (magnitude^2)
+
+% 2. Generate the waveforms
+t = (0:N-1) / Fs;
+phase_angles = [0, 30, 45, 90, 120];
+% phase_angles = [0];
+
+% Sine Waves
+frequencies_sine = [50e3, 49e3, 51e3, 5e3, 200e3];
+sine_waves = zeros(length(frequencies_sine), length(phase_angles), N, "int32");
+sine_waves_combined_single = zeros(length(phase_angles), N, "single");
+sine_waves_combined = zeros(length(phase_angles), N, "int32");
+
+for i = 1:length(frequencies_sine)
+    for j = 1:length(phase_angles)
+        frequency = frequencies_sine(i);
+        phase = phase_angles(j);
+        sine_wave = sin(2*pi*frequency*t + deg2rad(phase));
+        sine_waves(i, j, :) = scaleToInt(sine_wave, INPUT_BIT_LEN, INPUT_SWING);
+        sine_waves_combined_single(j, :) = sine_waves_combined_single(j, :) + sine_wave / length(frequencies_sine);
+    end
+end
+
+for j = 1:length(phase_angles)
+    phase = phase_angles(j);
+    sine_waves_combined(j, :) = scaleToInt(sine_waves_combined_single(j, :), INPUT_BIT_LEN, INPUT_SWING);
+end
+
+% Rectangular Waves
+frequencies_rectangular = [50e3, 16e3, 10e3, 200e3];
+rectangular_waves = zeros(length(frequencies_rectangular), length(phase_angles), N);
+rectangular_waves_combined_single = zeros(length(phase_angles), N, "single");
+rectangular_waves_combined = zeros(length(phase_angles), N, "int32");
+
+for i = 1:length(frequencies_rectangular)
+    for j = 1:length(phase_angles)
+        frequency = frequencies_rectangular(i);
+        phase = phase_angles(j);
+        rectangular_wave = square(2*pi*frequency*t + deg2rad(phase));
+        rectangular_waves(i, j, :) = scaleToInt(rectangular_wave, INPUT_BIT_LEN, INPUT_SWING);
+        rectangular_waves_combined_single(j, :) = rectangular_waves_combined_single(j, :) + rectangular_wave / length(frequencies_rectangular);
+    end
+end
+
+for j = 1:length(phase_angles)
+    phase = phase_angles(j);
+    rectangular_waves_combined(j, :) = scaleToInt(rectangular_waves_combined_single(j, :), INPUT_BIT_LEN, INPUT_SWING);
+end
+
+% Triangle Waves
+phase_angles_triangle = [0, 90];
+triangle_waves = zeros(length(phase_angles_triangle), N);
+
+for i = 1:length(phase_angles_triangle)
+    phase = phase_angles_triangle(i);
+    triangle_wave = sawtooth(2*pi*50e3*t + deg2rad(phase), 0.5);
+    triangle_waves(i, :) = scaleToInt(triangle_wave, INPUT_BIT_LEN, INPUT_SWING);
+end
+
+% 3. Goertzel Filter
+sine_waves_dft = zeros(length(frequencies_sine), length(phase_angles), "int32");
+for i = 1:length(frequencies_sine)
+    for j = 1:length(phase_angles)
+        dft_input = reshape(sine_waves(i, j, :), 1, []);
+        magnitude_sq = goertzel_filter(dft_input, Fk, Fs);
+        magnitude_sq_trunc = goertzel_filter_int(dft_input, Fk, Fs, COEFF_BW, LSB_TRUNC, MAG_TRUNC);
+        sine_waves_dft(i, j) = magnitude_sq_trunc;
+        fprintf("SIN freq: %d phase: %d mag: %.0f %d\n", frequencies_sine(i), phase_angles(j), magnitude_sq, magnitude_sq_trunc * 2 ^ (LSB_TRUNC * 2 + MAG_TRUNC));
+    end
+end
+
+sine_waves_combined_dft = zeros(length(phase_angles), 1, "int32");
+for i = 1:length(phase_angles)
+    dft_input = reshape(sine_waves_combined(i, :), 1, []);
+    magnitude_sq = goertzel_filter(dft_input, Fk, Fs);
+    magnitude_sq_trunc = goertzel_filter_int(dft_input, Fk, Fs, COEFF_BW, LSB_TRUNC, MAG_TRUNC);
+    sine_waves_combined_dft(i) = magnitude_sq_trunc;
+    fprintf("SIN_COMB phase: %d mag: %.0f %d\n", phase_angles(i), magnitude_sq, magnitude_sq_trunc * 2 ^ (LSB_TRUNC * 2 + MAG_TRUNC));
+end
+
+rectangular_waves_dft = zeros(length(frequencies_rectangular), length(phase_angles), "int32");
+for i = 1:length(frequencies_rectangular)
+    for j = 1:length(phase_angles)
+        dft_input = reshape(rectangular_waves(i, j, :), 1, []);
+        magnitude_sq = goertzel_filter(dft_input, Fk, Fs);
+        magnitude_sq_trunc = goertzel_filter_int(dft_input, Fk, Fs, COEFF_BW, LSB_TRUNC, MAG_TRUNC);
+        rectangular_waves_dft(i, j) = magnitude_sq_trunc;
+        fprintf("RECT freq: %d phase: %d mag: %.0f %d\n", frequencies_rectangular(i), phase_angles(j), magnitude_sq, magnitude_sq_trunc * 2 ^ (LSB_TRUNC * 2 + MAG_TRUNC));
+    end
+end
+
+rectangular_waves_combined_dft = zeros(length(phase_angles), 1, "int32");
+for i = 1:length(phase_angles)
+    dft_input = reshape(rectangular_waves_combined(i, :), 1, []);
+    magnitude_sq = goertzel_filter(dft_input, Fk, Fs);
+    magnitude_sq_trunc = goertzel_filter_int(dft_input, Fk, Fs, COEFF_BW, LSB_TRUNC, MAG_TRUNC);
+    rectangular_waves_combined_dft(i) = magnitude_sq_trunc;
+    fprintf("RECT_COMB phase: %d mag: %.0f %d\n", phase_angles(i), magnitude_sq, magnitude_sq_trunc * 2 ^ (LSB_TRUNC * 2 + MAG_TRUNC));
+end
+
+triangle_waves_dft = zeros(length(phase_angles_triangle), 1, "int32");
+for i = 1:length(phase_angles_triangle)
+    dft_input = reshape(triangle_waves(i, :), 1, []);
+    magnitude_sq = goertzel_filter(dft_input, Fk, Fs);
+    magnitude_sq_trunc = goertzel_filter_int(dft_input, Fk, Fs, COEFF_BW, LSB_TRUNC, MAG_TRUNC);
+    triangle_waves_dft(i) = magnitude_sq_trunc;
+    fprintf("TRI phase: %d mag: %.0f %d\n", phase_angles_triangle(i), magnitude_sq, magnitude_sq_trunc * 2 ^ (LSB_TRUNC * 2 + MAG_TRUNC));
+end
+
+% 4. Output the waveforms to a file
+% each entity occupies a row in the file
+
+% Create folders
+mkdir test_cases/input
+mkdir test_cases/expected
+
+% Fixed width and padding with zeros
+% in hex format, hence /4
+sigLineWidth = ceil(INPUT_BIT_LEN / 4);
+targetLineWidth = 5;
+
+% Loop through input signals & DFT results, and write each waveform to a separate file
+filePrefix = 'sine_wave';
+for i = 1:length(frequencies_sine)
+    for j = 1:length(phase_angles)
+        nameFreq = sprintf('%.0f%sHz', frequencies_sine(i) / 10^(3 * floor(log10(abs(frequencies_sine(i)))/3)), suffix(frequencies_sine(i)));
+
+        fileName = sprintf('test_cases/input/%s_%s_%ddeg.txt', filePrefix, nameFreq, phase_angles(j));
+        write_to_file(reshape(sine_waves(i, j, :), 1, []), fileName, sigLineWidth);
+
+        fileName = sprintf('test_cases/expected/%s_%s_%ddeg.txt', filePrefix, nameFreq, phase_angles(j));
+        write_to_file(reshape(sine_waves_dft(i, j, :), 1, []), fileName, targetLineWidth);
+    end
+end
+
+filePrefix = 'sine_wave_combined';
+for i = 1:length(phase_angles)
+    fileName = sprintf('test_cases/input/%s_%ddeg.txt', filePrefix, phase_angles(i));
+    write_to_file(sine_waves_combined(i, :), fileName, sigLineWidth);
+
+    fileName = sprintf('test_cases/expected/%s_%ddeg.txt', filePrefix, phase_angles(i));
+    write_to_file(sine_waves_combined_dft(i, :), fileName, targetLineWidth);
+end
+
+filePrefix = 'rectangular_wave';
+for i = 1:length(frequencies_rectangular)
+    for j = 1:length(phase_angles)
+        nameFreq = sprintf('%.0f%sHz', frequencies_rectangular(i) / 10^(3 * floor(log10(abs(frequencies_rectangular(i)))/3)), suffix(frequencies_rectangular(i)));
+
+        fileName = sprintf('test_cases/input/%s_%s_%ddeg.txt', filePrefix, nameFreq, phase_angles(j));
+        write_to_file(reshape(rectangular_waves(i, j, :), 1, []), fileName, sigLineWidth);
+
+        fileName = sprintf('test_cases/expected/%s_%s_%ddeg.txt', filePrefix, nameFreq, phase_angles(j));
+        write_to_file(reshape(rectangular_waves_dft(i, j, :), 1, []), fileName, targetLineWidth);
+    end
+end
+
+filePrefix = 'rectangular_wave_combined';
+for i = 1:length(phase_angles)
+    fileName = sprintf('test_cases/input/%s_%ddeg.txt', filePrefix, phase_angles(i));
+    write_to_file(rectangular_waves_combined(i, :), fileName, sigLineWidth);
+
+    fileName = sprintf('test_cases/expected/%s_%ddeg.txt', filePrefix, phase_angles(i));
+    write_to_file(rectangular_waves_combined_dft(i, :), fileName, targetLineWidth);
+end
+
+filePrefix = 'triangle_wave';
+for i = 1:length(phase_angles_triangle)
+    fileName = sprintf('test_cases/input/%s_50kHz_%ddeg.txt', filePrefix, phase_angles_triangle(i));
+    write_to_file(triangle_waves(i, :), fileName, sigLineWidth);
+
+    fileName = sprintf('test_cases/expected/%s_50kHz_%ddeg.txt', filePrefix, phase_angles_triangle(i));
+    write_to_file(triangle_waves_dft(i, :), fileName, targetLineWidth);
+end
+
+% 99. Function definitions in a script must appear at the end of the file
+
+function output = scaleToInt(input, bit_len, input_swing)
+    % Scale the waveforms to the range of 2^(bit_len - 1) +/- 2^input_swing
+    scaled = (2 ^ bit_len - 1) / 2 + input * (2 ^ input_swing - 1) / 2;
+    % Convert the scaled waveforms to (bit_len)-bit unsigned integers
+    output = int32(round(scaled));
+end
+
+% Function to generate SI unit suffix
+function s = suffix(num)
+    units = {'', 'k', 'M', 'G', 'T', 'P', 'E'};
+    exponent = log10(abs(num));
+    exponent = floor(exponent / 3);
+    exponent = max(min(exponent, numel(units)-1), 0);
+    s = units{exponent+1};
+end
+
+function magnitude_sq = goertzel_filter(signal, targetFrequency, samplingRate)
+    N = length(signal); % Length of the signal
+    k = round(N * targetFrequency / samplingRate); % Bin frequency
+    w = 2 * pi * k / N; % Angular frequency
+    cosine = cos(w);
+    coefficient = 2 * cosine;
+
+    s = zeros(N, 1); % First intermediate variable
+    sprev = 0; % Previous s[n-1]
+    sprev2 = 0; % Previous s[n-2]
+
+    % Iterate through the signal
+    for n = 1:N
+        s(n) = signal(n) + coefficient * sprev - sprev2;
+        sprev2 = sprev;
+        sprev = s(n);
+    end
+
+    % Compute the magnitude
+    sN = s(N);
+    sNprev = s(N-1);
+    magnitude_sq = double(sN^2 + sNprev^2 - sN * sNprev * coefficient);
+end
+
+function magnitude_sq_trunc = goertzel_filter_int(signal, targetFrequency, samplingRate, coeffBw, lsbTrunc, magTrunc)
+    N = length(signal); % Length of the signal
+    k = round(N * targetFrequency / samplingRate); % Bin frequency
+    w = 2 * pi * k / N; % Angular frequency
+    cosine = cos(w);
+    coefficient = 2 * cosine;
+    % round acconding to coeffBw
+    coefficient = convergent(coefficient * 2 ^ coeffBw) / (2 ^ coeffBw);
+
+    s = zeros(N, 1); % First intermediate variable
+    sprev = 0; % Previous s[n-1]
+    sprev2 = 0; % Previous s[n-2]
+
+    % Iterate through the signal
+    for n = 1:N
+        % truncate according to lsbTrunc
+        multi_prod = floor(coefficient * sprev);
+        % remove LSB instead of rounding, hence floor() instead of convergent()
+        s(n) = floor(double(signal(n) + multi_prod - sprev2) / 2 ^ lsbTrunc) * (2 ^ lsbTrunc);
+
+        sprev2 = sprev;
+        sprev = s(n);
+    end
+
+    % Compute the magnitude
+    sN = s(N);
+    sNprev = s(N-1);
+    magnitude_sq = double(sN^2 + sNprev^2 - sN * sNprev * coefficient);
+    % take the integer part of (sN * sNprev * coefficient) only
+    bit_shift = lsbTrunc * 2 + magTrunc;
+    magnitude_sq_trunc = floor(magnitude_sq / 2 ^ bit_shift);
+end
+
+function write_to_file(signal, fileName, lineWidth)
+    % Open the file for writing
+    fileID = fopen(fileName, 'w');
+
+    % Write each entity of the sine_wave to a line in the file
+    for k = 1:length(signal)
+        % dec2hex() can handle negative numbers
+        fprintf(fileID, '%s\n', dec2hex(signal(k), lineWidth));
+    end
+
+    % Close the file
+    fclose(fileID);
+end
+\end{lstlisting}

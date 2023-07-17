@@ -1,0 +1,264 @@
+\section{Implementation}\label{sec:implementation}
+
+We implemented the filter with the specifications summarized in table \ref{tab:specifications}. \\
+
+%\begin{itemize}
+ %   \item Input data: 14-bit unsigned, offset binary numbers
+  %  \item Internal data: 18-bit signed
+   % \item Output data in terms of $y(n)^2$
+    %\item Sampling frequency ($F_s$): 1 MHz
+    %\item Signal frequency to detect ($F_k$): 50 kHz
+    %\item $N$ = 100
+%\end{itemize}
+\begin{table}[ht]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+Input data                  & 14-bit unsigned, offset binary numbers  \\ \hline
+Internal data               & 18-bit signed                      \\ \hline
+Output data (in terms of $y(n)^2$) & 18-bit signed                \\ \hline
+Sampling frequency ($F_s$)  & 1 MHz                              \\ \hline
+Signal frequency to detect ($F_k$) & 50 kHz                             \\ \hline
+N                           & 100                                \\ \hline
+\end{tabular}
+\caption{Specifications for the project}
+\label{tab:specifications}
+\end{table}
+
+Following the discussions in Section \ref{sec:theory} and \ref{sec:pc}, from Equation n.\ref{eq:COEFF}, we calculated the constant $C$.
+
+\begin{align*}
+C &= 2\cos(\omega_0) = 2\cos\left(\frac{2\pi m}{N}\right) \\
+&= 2\cos\left(\frac{2\pi F_k}{F_s}\right) \\
+&= 2\cos\left(\frac{2\pi \times 50000}{1000000}\right) \approx 1.9021
+\end{align*}
+
+To use $C$ in our VHDL implementation, we rounded and converted it to an integer as following:
+
+\lstset{language=VHDL}
+\begin{figure}[H]\begin{lstlisting}
+GENERIC (
+    INT_BW : POSITIVE := 18;  -- bit width for internal data
+    C : SIGNED(INT_BW - 1 DOWNTO 0) := "01" & x"E6F1";
+    C_F : POSITIVE := INT_BW - 2 -- # of bits of fractional part of C
+);
+\end{lstlisting}
+\caption{Code snippet for the definition of $C$}
+\end{figure}
+
+Here $C$ is represented in the code as a signed integer equals to $1E6F1_{16} = 124657$, and \texttt{C\_F} is used to represented that the fractional part of \texttt{C} are 16 bits, i.e. $C$ is rounded into:
+\[
+C = 124657 \times 2^{-16} = 1.9021148681640625
+\]
+
+\subsection{Port Description}
+
+%The port employed by the Goertzel Filter is as following:\\
+The following block diagram depicts the ports specified for our implementation of the Goertzel filter, with the corrisponding VHDL description in Fig. n. \ref{fig:vhdl_ports}.
+% We need layers to draw the block diagram
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background,main,foreground}
+% Define a few styles and constants
+\tikzstyle{sensor}=[draw, fill=blue!20, text width=5em, 
+text centered, minimum height=2.5em]
+\tikzstyle{ann} = [above, text width=6em]
+\tikzstyle{naveqs} = [sensor, text width=6em, fill=white!20, 
+minimum height=8em, rounded corners]
+\def\blockdist{2.3}
+\def\edgedist{1}
+\begin{center}
+    \begin{tikzpicture}[>={Latex[scale=1.5]}]
+        %% Encoder
+        \node (naveq) [naveqs] {goertzel};
+        %% Inputs
+        \draw[<-] ($(naveq.south west)!0.8!(naveq.north west)$) -- +(-\edgedist,0) node [left] {Clk\_CI};
+        \draw[<-] ($(naveq.south west)!0.6!(naveq.north west)$) -- +(-\edgedist,0) node [left] {Rst\_RBI};
+        \draw[<-] ($(naveq.south west)!0.4!(naveq.north west)$) -- +(-\edgedist,0) node [left] {Sample\_SI};
+        \draw[<-] ($(naveq.south west)!0.2!(naveq.north west)$) -- +(-\edgedist,0) node [left] {En\_SI};
+        %% Outputs
+        \draw[->] ($(naveq.south east)!0.6!(naveq.north east)$) -- +(\edgedist,0) node [right] {Magnitude\_sq\_SO};
+        \draw[->] ($(naveq.south east)!0.4!(naveq.north east)$) -- +(\edgedist,0) node [right] {Done\_SO};
+    \end{tikzpicture}
+\end{center}
+
+
+
+
+
+\lstset{language=VHDL}
+\begin{figure}[H]\begin{lstlisting}
+ENTITY goertzel IS
+    GENERIC (
+        N : POSITIVE := 100;
+        SIG_BW : POSITIVE := 14;
+        INT_BW : POSITIVE := 18;
+        LSB_TRUNC : POSITIVE := 5;
+        MAG_TRUNC : POSITIVE := 11;
+        C : SIGNED(INT_BW - 1 DOWNTO 0) := "01" & x"E6F1";
+        C_F : POSITIVE := INT_BW - 2 -- # of bits of fractional part of C
+    );
+    PORT (
+        Clk_CI : IN STD_LOGIC;
+        Rst_RBI : IN STD_LOGIC;
+        Sample_SI : IN UNSIGNED(SIG_BW - 1 DOWNTO 0);
+        Magnitude_sq_SO : OUT SIGNED(INT_BW - 1 DOWNTO 0);
+        En_SI : IN STD_LOGIC;
+        Done_SO : OUT STD_LOGIC
+    );
+END ENTITY goertzel;
+\end{lstlisting}
+\caption{Code snippet for port definition}
+\label{fig:vhdl_ports}
+\end{figure}
+
+We specified generics in order to parametrize the design as much as possible, to favor reuse and portability. The description of each generic and port is as follow:
+\begin{itemize}
+    \item \texttt{N}: number of samples.
+    \item \texttt{SIG\_BW}: bit width for input signal.
+    \item \texttt{INT\_BW}: bit width for internal data.
+    \item \texttt{LSB\_TRUNC}: number of bit in internal data's LSB to be truncated to avoid overflow.
+    \item \texttt{MSG\_TRUNC}: number of bit in final result (\texttt{Magnitude\_sq\_SO})'LSB to be truncated to avoid overflow.
+    \item \texttt{Clk\_CI}: input, clock signal for input (\texttt{Sample\_SI}) and sequencial logic in the filter.
+    \item \texttt{Rst\_RBI}: input, active-high synchronous reset signal for internal memory in the filter.
+    \item \texttt{Sample\_SI}: input data, 14-bit unsigned, offset binary numbers (as specified in the requirements).
+    \item \texttt{Magnitude\_sq\_SO}: output data, 18-bit signed, in terms of $y(n)^2 / 2^{21}$.
+    \item \texttt{En\_SI}: input, enable signal for the filter, active high.
+    \item \texttt{Done\_SO}: output, indicating the processing of the filter is finish. It keeps high for 1 clock cycle.
+\end{itemize}
+
+As already mentioned, the implementation includes generics that are parameterized for ease of use, e.g. \texttt{N} and \texttt{C}. It allows for easy customization of parameters for different sampling frequency, signal frequency to detect, and the number of samples. However, it is important to carefully choose the number of truncated bits \texttt{LSB\_TRUNC} and \texttt{MAG\_TRUNC} to avoid overflow. Simulation can help determine the maximum possible value of $s(n)$ and output, hence decide the number of bits required.
+
+\subsection{Algorithm Implementation}
+\label{sec:algo}
+Following Fig n. \ref{fig:gf_overview} , we mapped the theoretical description of the algorithm into VHDL code.
+From equation n. \ref{eq:UPDATE}, the calculation of $s(n)$ is mapped according to the following code snippet:
+
+\lstset{language=VHDL}
+\begin{figure}[H]\begin{lstlisting}
+Sum <= resize(SIGNED('0' & Sample_SI), Sum'LENGTH) +
+    resize(shift_right(C * s1_D, C_F - LSB_TRUNC), Sum'LENGTH) -
+    shift_left(resize(s2_D, Sum'LENGTH), LSB_TRUNC);
+s0 <= Sum(INT_BW + LSB_TRUNC - 1 DOWNTO LSB_TRUNC);
+...
+PROCESS (Clk_CI) BEGIN
+    IF rising_edge(Clk_CI) THEN
+        IF Rst_RBI = '1' THEN ... ELSE
+            IF (Active_V = '1') THEN
+                s1_D <= s0;
+                s2_D <= s1_D;
+            ELSE
+                s1_D <= (OTHERS => '0');
+                s2_D <= (OTHERS => '0');
+            END IF;
+            ...
+        END IF;
+    END IF;
+END PROCESS;
+\end{lstlisting}
+\caption{Code snippet for the calculation of $s(n)$}
+\end{figure}
+Where:
+\begin{itemize}
+    \item \texttt{s0} = $s(n)$ from Equation n. \ref{eq:UPDATE}
+    \item \texttt{s1} = $s(n-1)$ 
+    \item \texttt{s2} = $s(n-2)$
+\end{itemize}
+Here $s(n)$ (\texttt{s0} in the code) is calculated by performing the following steps:
+\begin{enumerate}
+    \item The input signal, \texttt{Sample\_SI} is extended with a leading zero to match the length of \texttt{Sum}.
+    \item The product of \texttt{C} and \texttt{s1\_D} is calculated and right-shifted by \texttt{(C\_F - LSB\_TRUNC)} bits using \texttt{shift\_right}, as \texttt{C\_F} bits of \texttt{C} is fractional part. The result is resized to match the length of \texttt{Sum}.
+    \item The negative of \texttt{s2\_D} is resized to match the length of \texttt{Sum}.
+    \item The three values calculated above are added (+) together and assigned to the \texttt{Sum} signal.
+    \item \texttt{s0} is assigned the value of \texttt{Sum} from bit position \texttt{(INT\_BW + LSB\_TRUNC - 1)} down to bit position \texttt{LSB\_TRUNC}.
+\end{enumerate}
+
+We truncate \texttt{s0} because we use 18 bit for internal data, as specified in the specification, but that is not enough to store the result of $s(n)$. We discovered in our MATLAB simulation, as what will be introduced in Section n. \ref{sec:simulation}, that the the maximum value of $s(n)$ is between $2^{21}$ to $2^{22}$, while maximum value can be represented by a signed 18-bit integer is $2^{17} - 1$. To avoid overflow, we truncate 5 bits of LSB.
+
+$y(n)$ (\texttt{Magnitude\_sq\_SO}) is calculated according to Equation n. \ref{eq:yn2}, which is demonstrated with the following code snippet:
+
+\lstset{language=VHDL}
+\begin{figure}[H]
+\begin{lstlisting}
+-- results has been shifted by 2*LSB_TRUNC = 10 bits
+-- MATLAB sim shows that the results take at most 38 bits, hence truncate additional 11 bits (MAG_TRUNC) to fit into INT_BW (18 bits)
+Magnitude_sq <= resize(shift_right(
+    s1_D * s1_D +
+    s2_D * s2_D -
+    shift_right(s1_D * s2_D * C, C_F),
+    MAG_TRUNC), Magnitude_sq'LENGTH);
+...
+PROCESS (Clk_CI) BEGIN
+    IF rising_edge(Clk_CI) THEN
+        ...
+        Magnitude_sq_SO <= Magnitude_sq;
+    END IF;
+END PROCESS;
+\end{lstlisting}
+\caption{Code snippet for the calculation of $y(n)$}
+\end{figure}
+
+Similar to the calculation of $s(n)$, the product of (\texttt{1\_D * s2\_D * C, C\_F}) is first right-shifted by (\texttt{(C\_F - LSB\_TRUNC)}$\times 2$)  bits due to the fractional part of \texttt{C}.
+
+The \texttt{MAG\_TRUNC} bits of the LSB in the intermediate result, obtained by calculating \texttt{(s1\_D * s1\_D + s2\_D * s2\_D - s1\_D * s2\_D * C, C\_F)}, are truncated. Similar to \texttt{s0}, MATLAB simulation showed that the maximum value of output is between $2^{37}$ and $2^{38}$, hence we truncate 21 bits of LSB of integral part. As the 5 bits of LSB of \texttt{s1\_D} and \texttt{s2\_D} are already truncated, we only need to truncate an additional 11 bits, as defined in \texttt{MAG\_TRUNC}.
+
+In the design of the implementation, we have made a trade-off to truncate the bits instead of rounding them. This is because we can save the hardware source (e.g. area of silicon) that would be occupied by a rounding circuit. Additionally, the rounding of the last bit is often negligible and does not significantly affect the overall result: for the calculation of $s(n)$, the least significant bit (LSB) will be further truncated when we calculate the final result; as for the output calculation, the importance of result accuracy depends on the specific application. In some cases, the primary objective of the filter is to detect the presence of a signal rather than achieving high precision in the result.
+
+It is worth-noting that bit shifting is performed using functions \texttt{shift\_left()} and \texttt{shift\_right()}, instead of \texttt{SRL}, \texttt{SLL}, \texttt{SRA}, and \texttt{SLA} operators. \texttt{SRL}, \texttt{SLL}, \texttt{SRA}, and \texttt{SLA} behave unexpectedly or incorrectly for different types, and hence be removed in IEEE Standard for VHDL Language Reference Manual (IEEE 1076). \cite{vhdlshift} \texttt{shift\_left()} and \texttt{shift\_right()} were introduced in VHDL-2008 with the \texttt{numeric\_std} library to be used with \texttt{UNSIGNED} and \texttt{SIGNED} types.
+
+\subsection{Control Signals}
+
+We includes two control signals: \texttt{En\_SI} and \texttt{Done\_SO} in the design, which serve specific purposes for ease of application and downstream circuit usage.
+
+The \texttt{En\_SI} signal can be used to control the input data. For example, it can be used to indicate when the Analog-to-Digital Converter (ADC) starts producing valid output. Before \texttt{En\_SI} is high, the internal signals (e.g., \texttt{s1\_D}, \texttt{s2\_D}) are set to zero to ensure that when the filter starts to accept input data, the values in \texttt{s1\_D}, \texttt{s2\_D} are correct (i.e. equal to 0).
+
+The \texttt{Done\_SO} signal indicates the completion of the calculation process, signaling that the filter has finished computing the output. This makes it easier for downstream circuits to utilize the output, for example, instructing when to load the result into a First-In-First-Out (FIFO) buffer for further processing. This functionality is achieved by employing a counter, \texttt{Cnt\_D}, and asserting the \texttt{Done\_SO} signal when the counter reaches the number of samples \texttt{N}.
+
+\subsection{Timing Performance Consideration}
+
+We also consider the timing performance of the filter.
+
+First, it is improved by using Equation n. \ref{eq:yn2}, which utilizes \texttt{s1\_D} and \texttt{s2\_D}, instead of \texttt{s0} and \texttt{s1\_D}. This has effectively split the critical path in half, one being the calculation of \texttt{s0} and the other being that of \texttt{Magnitude\_sq\_SO}. This reduces the propagation delay and making it easier for EDA tools to meet timing requirements in place-and-route stage, and potentially allowing the circuit to be integrated in designs with a higher sampling frequency.
+
+Second, The output result is loaded into a memory behind \texttt{Magnitude\_sq\_SO}, as described in Section n. \ref{sec:algo}. This may improve timing performance for driving high fanout or complex circuits from the output port; however it comes with a cost of the use of additional flip-flops, hence it is good for devices, like FPGA, which usually have sufficient flip-flops; however, for ASIC, it may not be a good idea, as it may increase the circuit area. The inclusion of this particular piece of code depends on the design platform and specific requirements of the project.
+
+
+
+
+\subsection{Verification} \label{sec:testbench}
+
+A VHDL testbench is used to verify the functional behaviour of the filter. Input signals and expected results, generated from the MATLAB simulation mentioned in Section n. \ref{sec:matlab-float} and \ref{sec:matlab-int}, are read from files. The file format used hexadecimal representation, with each line representing an entity and fixed-length fields for input and output values. The testbench read and converted the values \texttt{SIGNED} for comparison with the output of the filter under test. The verification flow is demonstrated in Code Snippet \ref{code:testbench}.
+The output of the filter is compared with the expected results using \texttt{ASSERT} in VHDL, such that the verification can be done automatically, rather than with manually inspecting the waveforms. The results matched exactly, confirming the correctness of the implementation.
+
+\lstset{language=VHDL}
+\begin{figure}[H]
+\begin{lstlisting}
+FOR i IN TEST_CASE'RANGE LOOP
+    -- open input signal file
+    file_open(fstatus, fptr, INPUT_DIR & TEST_CASE(i), read_mode);
+    WHILE (NOT endfile(fptr)) LOOP
+        WAIT UNTIL Clk_CI = '1';
+        En_SI <= '1';
+        readline(fptr, file_line);
+        hread(file_line, var_data);
+        Sample_SI <= resize(var_data, Sample_SI'LENGTH);
+    END LOOP;
+    file_close(fptr);
+    -- wait for DUT to finish
+    En_SI <= '0';
+    WAIT UNTIL Done_SO = '1';
+    REPORT "Test case " & INTEGER'IMAGE(i) & ": " & TEST_CASE(i);
+    -- open expected result file
+    file_open(fstatus, fptr, EXPECTED_DIR & TEST_CASE(i), read_mode);
+    WHILE (NOT endfile(fptr)) LOOP
+        readline(fptr, file_line);
+        hread(file_line, var_expected);
+
+        ASSERT (resize(var_expected, Magnitude_sq_SO'LENGTH) = Magnitude_sq_SO)
+        REPORT "FAIL, Expected Magnitude_sq_SO: " & INTEGER'IMAGE(to_integer(var_expected)) & " Actual: " & INTEGER'IMAGE(to_integer(Magnitude_sq_SO)) SEVERITY WARNING;
+    END LOOP;
+    file_close(fptr);
+END LOOP;
+\end{lstlisting}
+\caption{\label{code:testbench}Code snippet for verification}
+\end{figure}

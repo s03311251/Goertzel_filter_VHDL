@@ -1,0 +1,36 @@
+
+
+\section{Practical Considerations }\label{sec:pc}
+
+The tone detection process involves performing the Goertzel algorithm on blocks of samples, similar to the FFT. Prior to apply it, however, certain steps are to be performed.
+%\begin{enumerate}
+ %   \item Choose a sample rate.
+  %  \item Select the $N$ (number of samples in the dataset) block size.
+   % \item Pre-calculate a sine term and a cosine term.
+    
+    %\item Determine one coefficient in advance.
+%\end{enumerate}
+
+%\textbf{Sampling Rate}
+First, a sample rate must be chosen. The Nyquist–Shannon sampling theorem should be followed when determining the sample rate, which indicates that the sampling rate must be at least twice as high as the highest frequency of interest. Every detected frequency must be an integer component of the sampling rate. According to given specifications, the sample frequency is 1MHz and the frequency to be detected is 50 kHz.
+Secondly, the number of samples $N$, or, in other words, the Goertzel block size $N$, has to be selected. This controls the frequency resolution (also known as bin width). A possible approach when choosing the value of $N$ would lead to choose the highest possible value in order to achieve the highest frequency resolution. As $N$ increases, however, the time for all the samples to arrive will increase as well, leading to a higher waiting time for each tone identification. For instance, 400 samples will be gathered in 100 ms at 4 kHz sampling. We must use compatible values of $N$ if we want to be able to identify short-duration tones. Another factor which influences the decision of $N$ is the correlation between sample rate and target frequencies. The frequencies $f$ should ideally be in the middle of their respective bins. The desired frequencies should therefore be integer multiples of $f/N$. According to our project, number of samples in dataset $N$ is 100, which reflects this discussion.
+The third step consists of calculating the constants which will be used during the calculation of the intermediate values. This can be performed prior as sample rate and block size are known. The computation follows these formulas:
+\begin{equation} \label{eq:COEFF}
+C=2cos(\omega_0)=2cos(\frac{2\pi m}{N})
+\end{equation}
+
+\begin{equation}
+C_i=cos(\frac{2\pi m}{N})-jsin(\frac{2\pi m}{N})=-e^{-j\frac{2\pi m}{N}}
+\end{equation}
+\begin{itemize}
+    \item 	$N$ is the total number of samples or data points in the input sequence.
+    \item The constant $m$ stands for the frequency index or bin that you want to use to calculate the Goertzel constants or coefficients for. $m$ has a value between 0 and $N-1$. In the DFT output, each value of $m$ corresponds to a particular frequency bin. To determine the Goertzel coefficients or constants for each frequency bin of interest, we typically loop through various values of $m$. We can extract frequency-domain data from the input signal and target other frequency bins by changing the value of $m$.
+    \item The coefficient $C$ is used to as a scaling factor for the calculation in IIR part; where $\omega_0$, as part of the calculation of $C$, is the normalized frequency to be detected, expressed in terms of radians per sample. $C$ controls the gain and magnitude of the filter's response, and hence influences how effectively it can isolate the desired frequency. It is vital to keep in mind that the coefficient $C$ does not change when the Goertzel algorithm is run because it only depends on the frequency bin $m$ that is selected and the overall number of samples ($N$).
+    \item $C_i$ is used to determine the signal’s real and imaginary components at a given frequency bin. In each iteration, the algorithm multiplies the input samples by the complex exponential term to extract the amplitude and phase details of that frequency component.
+\end{itemize}
+
+Finally, as indicated by Banks K. in \cite{embedded}, in the case where the phase information is not required, Equation n. \ref{eq:FIR} can be simplified as follows:
+
+\begin{equation}  \label{eq:yn2}
+    y(n)^2 = s(n-1)^2 + s(n-2)^2 - C s(n-1) s(n-2)
+\end{equation}
