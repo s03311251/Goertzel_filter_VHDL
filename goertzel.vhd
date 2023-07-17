@@ -89,7 +89,6 @@ BEGIN
 
     PROCESS (Clk_CI)
         VARIABLE Active_V : STD_LOGIC;
-        VARIABLE debug    : UNSIGNED(47 DOWNTO 0) := x"ABCDEF012345";
     BEGIN
         IF rising_edge(Clk_CI) THEN
             IF Rst_RBI = '1' THEN
@@ -118,7 +117,7 @@ BEGIN
                     s2_D <= (OTHERS => '0');
                 END IF;
 
-                -- calculation finished
+                -- check if calculation is finished
                 -- N - 1 because:
                 -- index of Cnt_D starts from 0 -> -1
                 -- Cnt_D starts counting 2 clk cycles after 1st sample arrives -> -2

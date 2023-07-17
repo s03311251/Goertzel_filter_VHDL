@@ -18,11 +18,9 @@ MAG_TRUNC = 11; % truncate final result (magnitude^2)
 % 2. Generate the waveforms
 t = (0:N-1) / Fs;
 phase_angles = [0, 30, 45, 90, 120];
-% phase_angles = [0];
 
 % Sine Waves
 frequencies_sine = [50e3, 49e3, 51e3, 5e3, 200e3];
-% frequencies_sine = [50e3];
 sine_waves = zeros(length(frequencies_sine), length(phase_angles), N, "int32");
 sine_waves_combined_single = zeros(length(phase_angles), N, "single");
 sine_waves_combined = zeros(length(phase_angles), N, "int32");
@@ -51,22 +49,13 @@ end
 for j = 1:length(phase_angles)
     phase = phase_angles(j);
     sine_waves_combined(j, :) = scaleToInt(sine_waves_combined_single(j, :), INPUT_BIT_LEN, INPUT_SWING);
-
-    % % Sanity Check for sine_waves_combined
-    % disp(['Phase: ', num2str(phase)]);
-    % min_value = min(sine_waves_combined(j, :));
-    % index = find(sine_waves_combined(j, :) == min_value);
-    % disp(['Min: ', num2str(min_value), ', scaled: ', num2str(sine_waves_combined(j, index)), ', index: ', num2str(index)]);
-    % max_value = max(sine_waves_combined(j, :));
-    % index = find(sine_waves_combined(j, :) == max_value);
-    % disp(['Max: ', num2str(max_value), ', scaled: ', num2str(sine_waves_combined(j, index)), ', index: ', num2str(index)]);
-    % index = find(sine_waves_combined(j, :) == 0.0);
-    % disp(['Zero: ', num2str(0.0), ', scaled: ', num2str(sine_waves_combined(j, index)), ', index: ', num2str(index)]);
 end
 
 % Rectangular Waves
 frequencies_rectangular = [50e3, 16e3, 10e3, 200e3];
 rectangular_waves = zeros(length(frequencies_rectangular), length(phase_angles), N);
+rectangular_waves_combined_single = zeros(length(phase_angles), N, "single");
+rectangular_waves_combined = zeros(length(phase_angles), N, "int32");
 
 for i = 1:length(frequencies_rectangular)
     for j = 1:length(phase_angles)
@@ -74,7 +63,13 @@ for i = 1:length(frequencies_rectangular)
         phase = phase_angles(j);
         rectangular_wave = square(2*pi*frequency*t + deg2rad(phase));
         rectangular_waves(i, j, :) = scaleToInt(rectangular_wave, INPUT_BIT_LEN, INPUT_SWING);
+        rectangular_waves_combined_single(j, :) = rectangular_waves_combined_single(j, :) + rectangular_wave / length(frequencies_rectangular);
     end
+end
+
+for j = 1:length(phase_angles)
+    phase = phase_angles(j);
+    rectangular_waves_combined(j, :) = scaleToInt(rectangular_waves_combined_single(j, :), INPUT_BIT_LEN, INPUT_SWING);
 end
 
 % Triangle Waves
@@ -127,6 +122,20 @@ end
 %     ylabel('Amplitude');
 % end
 
+% % Plotting rectangular_waves_combined
+% figure;
+% t = (0:N-1) / Fs;
+% for i = 1:size(rectangular_waves_combined, 1)
+%     figure;
+%     % subplot(size(rectangular_waves_combined, 1), 1, i);
+%     % Extract a row from the 3D array as a 1D array
+%     wave = reshape(rectangular_waves_combined(i, :), 1, []);
+%     plot(t, wave);
+%     title(['Sine Wave (Combined) ', num2str(i)]);
+%     xlabel('Time (s)');
+%     ylabel('Amplitude');
+% end
+
 % % Plotting triangle_wave
 % figure;
 % for i = 1:size(triangle_waves, 1)
@@ -142,52 +151,50 @@ end
 sine_waves_dft = zeros(length(frequencies_sine), length(phase_angles), "int32");
 for i = 1:length(frequencies_sine)
     for j = 1:length(phase_angles)
-        % freq_indices = round(Fk/Fs*N) + 1;
-        % % transform to single precision because goertzel only accepts single
-        % dft_data = goertzel(single(sine_waves(i, j, :)),freq_indices);
         dft_input = reshape(sine_waves(i, j, :), 1, []);
-        magnitude_sq = goertzel_filter(dft_input, Fk, Fs, COEFF_BW, LSB_TRUNC, MAG_TRUNC);
-        sine_waves_dft(i, j) = magnitude_sq;
-        % fprintf("freq: %d phase: %d magnitude: %d\n", i, j, abs(dft_data));
-        fprintf("SIN freq: %d phase: %d s: %d %d\n", frequencies_sine(i), phase_angles(j), s, s_prev);
+        magnitude_sq = goertzel_filter(dft_input, Fk, Fs);
+        magnitude_sq_trunc = goertzel_filter_int(dft_input, Fk, Fs, COEFF_BW, LSB_TRUNC, MAG_TRUNC);
+        sine_waves_dft(i, j) = magnitude_sq_trunc;
+        fprintf("SIN freq: %d phase: %d mag: %.0f %d\n", frequencies_sine(i), phase_angles(j), magnitude_sq, magnitude_sq_trunc * 2 ^ (LSB_TRUNC * 2 + MAG_TRUNC));
     end
 end
-
-% figure; % open a new figure window
-% stem(Fk,abs(dft_data))
-
-% % Adjusting subplot spacing
-% sgtitle('Waveform Plots');
-
-% ax = gca;
-% ax.XTick = Fk;
-% xlabel('Frequency (Hz)')
-% ylabel('DFT Magnitude')
 
 sine_waves_combined_dft = zeros(length(phase_angles), 1, "int32");
 for i = 1:length(phase_angles)
     dft_input = reshape(sine_waves_combined(i, :), 1, []);
-    magnitude_sq = goertzel_filter(dft_input, Fk, Fs, COEFF_BW, LSB_TRUNC, MAG_TRUNC);
-    sine_waves_combined_dft(i) = magnitude_sq;
-    fprintf("SIN_COMB phase: %d s: %d %d\n", phase_angles(i), s, s_prev);
+    magnitude_sq = goertzel_filter(dft_input, Fk, Fs);
+    magnitude_sq_trunc = goertzel_filter_int(dft_input, Fk, Fs, COEFF_BW, LSB_TRUNC, MAG_TRUNC);
+    sine_waves_combined_dft(i) = magnitude_sq_trunc;
+    fprintf("SIN_COMB phase: %d mag: %.0f %d\n", phase_angles(i), magnitude_sq, magnitude_sq_trunc * 2 ^ (LSB_TRUNC * 2 + MAG_TRUNC));
 end
 
 rectangular_waves_dft = zeros(length(frequencies_rectangular), length(phase_angles), "int32");
 for i = 1:length(frequencies_rectangular)
     for j = 1:length(phase_angles)
         dft_input = reshape(rectangular_waves(i, j, :), 1, []);
-        magnitude_sq = goertzel_filter(dft_input, Fk, Fs, COEFF_BW, LSB_TRUNC, MAG_TRUNC);
-        rectangular_waves_dft(i, j) = magnitude_sq;
-        fprintf("RECT freq: %d phase: %d s: %d %d\n", frequencies_rectangular(i), phase_angles(j), s, s_prev);
+        magnitude_sq = goertzel_filter(dft_input, Fk, Fs);
+        magnitude_sq_trunc = goertzel_filter_int(dft_input, Fk, Fs, COEFF_BW, LSB_TRUNC, MAG_TRUNC);
+        rectangular_waves_dft(i, j) = magnitude_sq_trunc;
+        fprintf("RECT freq: %d phase: %d mag: %.0f %d\n", frequencies_rectangular(i), phase_angles(j), magnitude_sq, magnitude_sq_trunc * 2 ^ (LSB_TRUNC * 2 + MAG_TRUNC));
     end
+end
+
+rectangular_waves_combined_dft = zeros(length(phase_angles), 1, "int32");
+for i = 1:length(phase_angles)
+    dft_input = reshape(rectangular_waves_combined(i, :), 1, []);
+    magnitude_sq = goertzel_filter(dft_input, Fk, Fs);
+    magnitude_sq_trunc = goertzel_filter_int(dft_input, Fk, Fs, COEFF_BW, LSB_TRUNC, MAG_TRUNC);
+    rectangular_waves_combined_dft(i) = magnitude_sq_trunc;
+    fprintf("RECT_COMB phase: %d mag: %.0f %d\n", phase_angles(i), magnitude_sq, magnitude_sq_trunc * 2 ^ (LSB_TRUNC * 2 + MAG_TRUNC));
 end
 
 triangle_waves_dft = zeros(length(phase_angles_triangle), 1, "int32");
 for i = 1:length(phase_angles_triangle)
     dft_input = reshape(triangle_waves(i, :), 1, []);
-    magnitude_sq = goertzel_filter(dft_input, Fk, Fs, COEFF_BW, LSB_TRUNC, MAG_TRUNC);
-    triangle_waves_dft(i) = magnitude_sq;
-    fprintf("TRI phase: %d s: %d %d\n", phase_angles_triangle(i), s, s_prev);
+    magnitude_sq = goertzel_filter(dft_input, Fk, Fs);
+    magnitude_sq_trunc = goertzel_filter_int(dft_input, Fk, Fs, COEFF_BW, LSB_TRUNC, MAG_TRUNC);
+    triangle_waves_dft(i) = magnitude_sq_trunc;
+    fprintf("TRI phase: %d mag: %.0f %d\n", phase_angles_triangle(i), magnitude_sq, magnitude_sq_trunc * 2 ^ (LSB_TRUNC * 2 + MAG_TRUNC));
 end
 
 % 5. Output the waveforms to a file
@@ -238,6 +245,15 @@ for i = 1:length(frequencies_rectangular)
     end
 end
 
+filePrefix = 'rectangular_wave_combined';
+for i = 1:length(phase_angles)
+    fileName = sprintf('test_cases/input/%s_%ddeg.txt', filePrefix, phase_angles(i));
+    write_to_file(rectangular_waves_combined(i, :), fileName, sigLineWidth);
+
+    fileName = sprintf('test_cases/expected/%s_%ddeg.txt', filePrefix, phase_angles(i));
+    write_to_file(rectangular_waves_combined_dft(i, :), fileName, targetLineWidth);
+end
+
 filePrefix = 'triangle_wave';
 for i = 1:length(phase_angles_triangle)
     fileName = sprintf('test_cases/input/%s_50kHz_%ddeg.txt', filePrefix, phase_angles_triangle(i));
@@ -266,8 +282,31 @@ function s = suffix(num)
 end
 
 % Luca's Filter
-% function magnitude = goertzel_filter(signal, targetFrequency, samplingRate)
-function magnitude_sq_trunc = goertzel_filter(signal, targetFrequency, samplingRate, coeffBw, lsbTrunc, magTrunc)
+function magnitude_sq = goertzel_filter(signal, targetFrequency, samplingRate)
+    N = length(signal); % Length of the signal
+    k = round(N * targetFrequency / samplingRate); % Bin frequency
+    w = 2 * pi * k / N; % Angular frequency
+    cosine = cos(w);
+    coefficient = 2 * cosine;
+
+    s = zeros(N, 1); % First intermediate variable
+    sprev = 0; % Previous s[n-1]
+    sprev2 = 0; % Previous s[n-2]
+
+    % Iterate through the signal
+    for n = 1:N
+        s(n) = signal(n) + coefficient * sprev - sprev2;
+        sprev2 = sprev;
+        sprev = s(n);
+    end
+
+    % Compute the magnitude
+    sN = s(N);
+    sNprev = s(N-1);
+    magnitude_sq = double(sN^2 + sNprev^2 - sN * sNprev * coefficient);
+end
+
+function magnitude_sq_trunc = goertzel_filter_int(signal, targetFrequency, samplingRate, coeffBw, lsbTrunc, magTrunc)
     N = length(signal); % Length of the signal
     k = round(N * targetFrequency / samplingRate); % Bin frequency
     w = 2 * pi * k / N; % Angular frequency
@@ -275,43 +314,21 @@ function magnitude_sq_trunc = goertzel_filter(signal, targetFrequency, samplingR
     coefficient = 2 * cosine;
     % round acconding to coeffBw
     coefficient = convergent(coefficient * 2 ^ coeffBw) / (2 ^ coeffBw);
-    % fprintf("COEFF %.20f\n", coefficient); % 1.9021148681640625
 
     s = zeros(N, 1); % First intermediate variable
     sprev = 0; % Previous s[n-1]
     sprev2 = 0; % Previous s[n-2]
 
     % Iterate through the signal
-    % min = 0.0;
-    % max = 0.0;
     for n = 1:N
-        % s(n) = signal(n) + coefficient * sprev - sprev2;
-
         % truncate according to lsbTrunc
-        % multi_prod_trunc = round(coefficient * sprev / 2 ^ lsbTrunc) * (2 ^ lsbTrunc);
         multi_prod = floor(coefficient * sprev);
-        % s_tmp = signal(n) + multi_prod - sprev2;
         % remove LSB instead of rounding, hence floor() instead of convergent()
         s(n) = floor(double(signal(n) + multi_prod - sprev2) / 2 ^ lsbTrunc) * (2 ^ lsbTrunc);
 
-        % debug
-        % fprintf("Prod_SO %d Sample_SI %d COEFF*Prod_q_D %d Prod_qq_D %d\n", s(n), signal(n), multi_prod, sprev2);
-        % fprintf("Prod_SO %d Sample_SI %d COEFF*Prod_q_D %d Prod_qq_D %d s_tmp %f\n", s(n), signal(n), multi_prod, sprev2, s_tmp);
-        % fprintf("n: %d Prod_SO %f Sample_SI %f COEFF*Prod_q_D %f %.20f %f Prod_qq_D %f\n", n, s(n), signal(n), multi_prod, coefficient, sprev, sprev2);        
-
         sprev2 = sprev;
         sprev = s(n);
-
-        % % debug
-        % fprintf("n: %d s(n): %f\n", n, s(n));
-        % if s(n) < min
-        %     min = s(n);
-        % elseif s(n) > max
-        %     max = s(n);
-        % end
     end
-    % % debug
-    % fprintf("min: %f max: %f\n", min, max);
 
     % Compute the magnitude
     sN = s(N);
@@ -328,7 +345,6 @@ function write_to_file(signal, fileName, lineWidth)
 
     % Write each entity of the sine_wave to a line in the file
     for k = 1:length(signal)
-        % fprintf(fileID, '%0*X\n', lineWidth, signal(k));
         % dec2hex() can handle negative numbers
         fprintf(fileID, '%s\n', dec2hex(signal(k), lineWidth));
     end

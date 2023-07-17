@@ -78,6 +78,11 @@ ARCHITECTURE testbench_arch OF goertzel_tb IS
         to_100_char("rectangular_wave_200kHz_45deg.txt" & NUL),
         to_100_char("rectangular_wave_200kHz_90deg.txt" & NUL),
         to_100_char("rectangular_wave_200kHz_120deg.txt" & NUL),
+        to_100_char("rectangular_wave_combined_0deg.txt" & NUL),
+        to_100_char("rectangular_wave_combined_30deg.txt" & NUL),
+        to_100_char("rectangular_wave_combined_45deg.txt" & NUL),
+        to_100_char("rectangular_wave_combined_90deg.txt" & NUL),
+        to_100_char("rectangular_wave_combined_120deg.txt" & NUL),
         to_100_char("triangle_wave_50kHz_0deg.txt" & NUL),
         to_100_char("triangle_wave_50kHz_90deg.txt" & NUL)
     );
@@ -165,8 +170,6 @@ BEGIN
         En_SI     <= '0';
         WAIT UNTIL Rst_RBI = '0';
 
-        -- open input signal files
-
         FOR i IN TEST_CASE'RANGE LOOP
             -- open input signal file
             file_open(fstatus, fptr, INPUT_DIR & TEST_CASE(i), read_mode);
@@ -181,26 +184,22 @@ BEGIN
 
             file_close(fptr);
 
-            -- wait for DUT to finish            
+            -- wait for DUT to finish
             En_SI <= '0';
             WAIT UNTIL Done_SO = '1';
             REPORT "Test case " & INTEGER'IMAGE(i) & ": " & TEST_CASE(i);
 
             -- open expected result file
             file_open(fstatus, fptr, EXPECTED_DIR & TEST_CASE(i), read_mode);
+            readline(fptr, file_line);
+            hread(file_line, var_expected); -- hex
 
-            WHILE (NOT endfile(fptr)) LOOP
-                readline(fptr, file_line);
-                hread(file_line, var_expected); -- hex
-
-                -- ASSERT (resize(var_expected, Magnitude_sq_SO'LENGTH) /= Magnitude_sq_SO)
-                -- REPORT "PASS" SEVERITY NOTE;
-                ASSERT (resize(var_expected, Magnitude_sq_SO'LENGTH) = Magnitude_sq_SO)
-                REPORT "FAIL, Expected Magnitude_sq_SO: " & INTEGER'IMAGE(to_integer(var_expected)) & " Actual: " & INTEGER'IMAGE(to_integer(Magnitude_sq_SO)) SEVERITY WARNING;
-            END LOOP;
+            -- ASSERT (resize(var_expected, Magnitude_sq_SO'LENGTH) /= Magnitude_sq_SO)
+            -- REPORT "PASS" SEVERITY NOTE;
+            ASSERT (resize(var_expected, Magnitude_sq_SO'LENGTH) = Magnitude_sq_SO)
+            REPORT "FAIL, Expected Magnitude_sq_SO: " & INTEGER'IMAGE(to_integer(var_expected)) & " Actual: " & INTEGER'IMAGE(to_integer(Magnitude_sq_SO)) SEVERITY WARNING;
 
             file_close(fptr);
-
         END LOOP;
 
         -- terminate
@@ -221,7 +220,6 @@ BEGIN
         C_F       => C_F
     )
     PORT MAP(
-
         Clk_CI          => Clk_CI,
         Rst_RBI         => Rst_RBI,
         Sample_SI       => Sample_SI,
