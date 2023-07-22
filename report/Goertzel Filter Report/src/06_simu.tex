@@ -44,7 +44,7 @@ We developed our implemention of the Goertzel Filter according to Equations n. \
               ymajorgrids = true,
               xlabel = {Frequencies (kHz)},
               ylabel = {$Magnitude^2$},
-              symbolic x coords={5, 49, 50, 51, 200},%, combined},
+              symbolic x coords={5, 49, 50, 51, 200,combined},
               xtick = data,
               scaled x ticks = true,
               scaled y ticks = true,
@@ -61,26 +61,26 @@ We developed our implemention of the Goertzel Filter according to Equations n. \
               extra y tick style={grid=major,major grid style={thick,draw=black}}
             ]
             \addplot[style={blue,fill=blue,mark=none}]
-            coordinates {(5, 28165288) (49, 164300582087) (50, 167754581071) (51, 159204915664) (200, 19) %(combined, 55316152356)
+            coordinates {(5, 28165288) (49, 164300582087) (50, 167754581071) (51, 159204915664) (200, 19) (combined, 55316152356)
             };
         
              %\addplot[style={black,fill=red,mark=none}]
              %coordinates {(5, 27262976) (49, 164186030080) (50, 167786840064) (51, 159184322560) (200, 0)};
         
             \addplot[style={blue,fill=blue,mark=none}]
-            coordinates {(5, 682813699) (49, 165638701140) (50, 167757951221) (51, 161622013902) (200, 6) %(combined, 57679231120)
+            coordinates {(5, 682813699) (49, 165638701140) (50, 167757951221) (51, 161622013902) (200, 6) (combined, 57679231120)
             };
         
             \addplot[style={blue,fill=blue,mark=none}]
-            coordinates {(5, 1368984191) (49, 165006710536) (50, 167745947887) (51, 163313161637) (200, 14) %(combined, 58261386167)
+            coordinates {(5, 1368984191) (49, 165006710536) (50, 167745947887) (51, 163313161637) (200, 14) (combined, 58261386167)
             };
         
             \addplot[style={blue,fill=blue,mark=none}]
-            coordinates {(5, 2796749553) (49, 160349176237) (50, 167748444133) (51, 165437419087) (200, 19) %(combined, 56341860579)
+            coordinates {(5, 2796749553) (49, 160349176237) (50, 167748444133) (51, 165437419087) (200, 19) (combined, 56341860579)
             };
         
             \addplot[style={blue,fill=blue,mark=none}]
-            coordinates {(5, 2142148654) (49, 159011970308) (50, 167756010813) (51, 163022198679) (200, 29) %(combined, 53976111895)
+            coordinates {(5, 2142148654) (49, 159011970308) (50, 167756010813) (51, 163022198679) (200, 29) (combined, 53976111895)
             };
         
             \legend{Phase angle: 0° 30° 45° 90° 120°}
@@ -104,7 +104,7 @@ We developed our implemention of the Goertzel Filter according to Equations n. \
               ymajorgrids = true,
               xlabel = {Frequencies (kHz)},
               ylabel = {$Magnitude^2$},
-              symbolic x coords={10, 16, 50, 200},%, combined},
+              symbolic x coords={10, 16, 50, 200, combined},
               xtick = data,
               scaled x ticks = true,
               scaled y ticks = true,
@@ -121,21 +121,22 @@ We developed our implemention of the Goertzel Filter according to Equations n. \
               extra y tick style={grid=major,major grid style={thick,draw=black}}
             ]
             \addplot[style={blue,fill=blue,mark=none}]
-            coordinates {(10, 10967862060) (16, 35190107208) (50, 271780927294) (200, 268402689) %(combined, 39636235246)
+            coordinates {(10, 10967862060) (16, 35190107208) (50, 271780927294) (200, 268402689) 
+            (combined, 39636235246)
             };
         
             \addplot[style={blue,fill=blue,mark=none}]
-            coordinates {(10, 10967862060) (16, 38711007665) (50, 274196551495) (200, 0) %(combined, 27759917661)
+            coordinates {(10, 10967862060) (16, 38711007665) (50, 274196551495) (200, 0) (combined, 27759917661)
             };
         
             \addplot[style={blue,fill=blue,mark=none}]
             coordinates {(10, 10967862060) (16, 25835512141) (50, 274196551495) (200, 0) 
-            %(combined, 19477158285)
+            (combined, 19477158285)
             };
         
             \addplot[style={blue,fill=blue,mark=none}]
             coordinates {(10, 10967862060) (16, 13709827575) (50, 269902108471) (200, 0) 
-            %(combined, 16577256943)
+            (combined, 16577256943)
             };
         
             
@@ -210,7 +211,7 @@ As shown in Fig. n. \ref{fig:gf_sim_sine}, the filter in this design can barely 
         ymajorgrids = true,
         xlabel = {Frequencies (kHz)},
         ylabel = {$Magnitude^2$},
-        symbolic x coords={5, 49, 50, 51, 200},%, combined},
+        symbolic x coords={5, 49, 50, 51, 200, combined},
         xtick = data,
         scaled x ticks = true,
         scaled y ticks = true,
@@ -228,27 +229,27 @@ As shown in Fig. n. \ref{fig:gf_sim_sine}, the filter in this design can barely 
       ]
       \addplot[style={blue,fill=blue,mark=none}]
       coordinates {(5, 28136055) (49, 1666618598937) (50, 4193875917772) (51, 1732388606682) (200, 205) 
-      %(combined, 167767402016)
+      (combined, 167767402016)
       };
 
       \addplot[style={blue,fill=blue,mark=none}]
       coordinates {(5, 683029058) (49, 1674052576567) (50, 4193942960824) (51, 1725444346577) (200, 41) 
-      %(combined, 175769719174)
+      (combined, 175769719174)
       };
   
       \addplot[style={blue,fill=blue,mark=none}]
       coordinates {(5, 1369507272) (49, 1689292248901) (50, 4193627387892) (51, 1710630899751) (200, 59) 
-      %(combined, 177898066729)
+      (combined, 177898066729)
       };
 
       \addplot[style={blue,fill=blue,mark=none}]
       coordinates {(5, 2796634597) (49, 1733120151328) (50, 4193826613449) (51, 1667358625940) (200, 61) 
-      %(combined, 172045669337)
+      (combined, 172045669337)
       };
   
       \addplot[style={blue,fill=blue,mark=none}]
       coordinates {(5, 2141985241) (49, 1725657357466) (50, 4193909153782) (51, 1674273740527) (200, 124) 
-      %(combined, 164047439042)
+      (combined, 164047439042)
       };
   
       \legend{Phase angle: 0° 30° 45° 90° 120°}
@@ -260,7 +261,7 @@ As shown in Fig. n. \ref{fig:gf_sim_sine}, the filter in this design can barely 
   \label{fig:gf_sim_N500}
 \end{figure}
 
-The magnitudes of multi-tone waves with all the frequencies combined are lower than those of single-tone waves in 50 kHz. This is because the multi-tone waves are normalized to $0$ to $2^{14} - 1$, hence their components corresponding to 50 kHz is smaller than those single-tone waves.
+The magnitudes of multi-tone waves with all the frequencies combined are lower than those of single-tone waves in 50 kHz. We suspect, this is due to the multi-tone waves are normalized to $0$ to $2^{14} - 1$, hence their components corresponding to 50 kHz is smaller than those single-tone waves.
 
 \subsection{MATLAB Simulation with integers and LSB truncation}  \label{sec:matlab-int}
 

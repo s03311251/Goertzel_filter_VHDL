@@ -1,6 +1,6 @@
 # Don't read me
 
-Homework for MOD2-02 Microelectronics & HW/SW-Co-Design, Summer Semester 2023
+Homework for MOD2-02 Microelectronics & HW/SW-Co-Design, Summer Semester 2023, Fachhochschule Dortmund
 
 ![Dreamt-I-Went-Outside Acrylic Smartphone Stand](ninomae_inanis.webp)
 
